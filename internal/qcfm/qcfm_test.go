@@ -201,3 +201,37 @@ func FuzzRead(f *testing.F) {
 		}
 	})
 }
+
+// Cover transfers spanning multiple bulk buffers, with erased gaps and a
+// partial final block. Compare the reconstructed logical image byte for byte.
+func TestBulkRunsPreserveGapsAndPartialPadding(t *testing.T) {
+	for _, v := range []int{2, 3} {
+		data := bytes.Repeat([]byte{0x37}, (9<<20)+17)
+		gapStart := 5 << 20
+		gapEnd := gapStart + 3*BlockSize
+		for i := gapStart; i < gapEnd; i++ {
+			data[i] = 255
+		}
+		dir := t.TempDir()
+		in := filepath.Join(dir, "bulk.ufs")
+		out := filepath.Join(dir, "bulk.signed")
+		if err := os.WriteFile(in, data, 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := Pack(out, []Input{{Path: in}}, Options{Version: v, Sign: true}); err != nil {
+			t.Fatal(err)
+		}
+		_, reader, container := openContainer(t, out)
+		if len(container.V2[0].Runs) != 2 {
+			t.Fatal("sparse gap lost", container.V2[0].Runs)
+		}
+		var got bytes.Buffer
+		if err := Extract(reader, container.V2[0], false, &got); err != nil {
+			t.Fatal(err)
+		}
+		expected := append(bytes.Clone(data), make([]byte, BlockSize-len(data)%BlockSize)...)
+		if !bytes.Equal(got.Bytes(), expected) {
+			t.Fatal("changed bulk payload/gap/padding")
+		}
+	}
+}

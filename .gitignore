@@ -57,3 +57,5 @@ tests/dummy.qnx6
 /out/
 coverage.out
 *.test
+/.build-version.json
+/.build-version.json.lock/

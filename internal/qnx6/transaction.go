@@ -3,7 +3,6 @@ package qnx6
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/bb10root/bb10mt/internal/atomicfile"
@@ -26,7 +25,7 @@ func Transaction(input, output string, edit func(*Editor) error) error {
 		return fmt.Errorf("source must be a regular image")
 	}
 	return atomicfile.Write(output, func(f *os.File) error {
-		if _, e := io.CopyN(f, source, st.Size()); e != nil {
+		if _, e := binio.BulkCopyN(f, source, st.Size()); e != nil {
 			return e
 		}
 		editor, e := NewEditor(f)

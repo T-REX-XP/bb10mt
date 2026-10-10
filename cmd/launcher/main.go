@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/bb10root/bb10mt/internal/apperror"
 	"github.com/bb10root/bb10mt/internal/runtimebundle"
 )
 
@@ -18,8 +19,7 @@ var payload []byte
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "runtime:", err)
-		os.Exit(1)
+		os.Exit(apperror.Print(os.Stderr, err))
 	}
 }
 func run() error {

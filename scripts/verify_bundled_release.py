@@ -41,6 +41,7 @@ def main():
     parser.add_argument("--record", help="Write machine-readable verification report")
     args = parser.parse_args()
     root = pathlib.Path(args.directory)
+    expected_version = json.loads((root / 'sbom.cdx.json').read_text())['metadata']['component']['version']
     checksums = {}
     for line in (root / "SHA256SUMS").read_text().splitlines():
         sha, name = line.split("  ", 1)
@@ -48,7 +49,10 @@ def main():
         with (root / name).open("rb") as file:
             assert hashlib.file_digest(file, "sha256").hexdigest() == sha, name
         checksums[name] = sha
-    assert len(checksums) == 16, len(checksums)
+    assert len(checksums) in (16, 17), len(checksums)
+    if 'build-version.json' in checksums:
+        version = json.loads((root / 'build-version.json').read_text())['version']
+        assert json.loads((root / 'sbom.cdx.json').read_text())['metadata']['component']['version'] == version
     assert set(p.name for p in root.iterdir()) == {*checksums, "SHA256SUMS"}
     report = {"verifiedChecksumEntries": len(checksums), "targets": {}, "sha256": checksums}
     lock = json.loads((root / "runtime.lock.json").read_text())
@@ -64,6 +68,8 @@ def main():
         data = (root / name).read_bytes()
         payload, manifest = embedded(data)
         assert manifest["target"] == target
+        if 'build-version.json' in checksums:
+            assert manifest['version'] == expected_version
         with zipfile.ZipFile(io.BytesIO(payload)) as runtime:
             expected = {"manifest.json", *(row["path"] for row in manifest["files"])}
             assert set(runtime.namelist()) == expected
@@ -97,10 +103,10 @@ def main():
         assert {p.name for p in other.iterdir()} == {p.name for p in root.iterdir()}
         for name in [*checksums, "SHA256SUMS"]:
             assert (root / name).read_bytes() == (other / name).read_bytes(), name
-        report["allSeventeenFilesIdenticalAcrossTwoBuilds"] = True
+        report["allReleaseFilesIdenticalAcrossTwoBuilds"] = True
     if args.record:
         pathlib.Path(args.record).write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", newline="\n")
-    print("PASS: six embedded runtimes, 16 checksums, native sources, archive equality" + (", reproducible rebuild" if args.compare else ""))
+    print("PASS: six embedded runtimes, %d checksums, native sources, archive equality" % len(checksums) + (", reproducible rebuild" if args.compare else ""))
 
 
 if __name__ == "__main__":

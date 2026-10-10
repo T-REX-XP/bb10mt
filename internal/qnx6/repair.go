@@ -34,7 +34,7 @@ func RepairNames(input, output string) (Audit, error) {
 		return audit, e
 	}
 	e = atomicfile.Write(output, func(out *os.File) error {
-		if _, e := io.CopyN(out, io.NewSectionReader(f, 0, r.Size), r.Size); e != nil {
+		if _, e := binio.BulkCopyN(out, io.NewSectionReader(f, 0, r.Size), r.Size); e != nil {
 			return e
 		}
 		b := make([]byte, 4)
@@ -88,7 +88,7 @@ func Repair(input, output string) (CheckReport, error) {
 		}
 	}
 	err = atomicfile.Write(output, func(out *os.File) error {
-		if _, err := io.CopyN(out, io.NewSectionReader(f, 0, r.Size), r.Size); err != nil {
+		if _, err := binio.BulkCopyN(out, io.NewSectionReader(f, 0, r.Size), r.Size); err != nil {
 			return err
 		}
 		b := make([]byte, 4)

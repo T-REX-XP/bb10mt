@@ -80,7 +80,7 @@ func Compact(input, output string) (CompactReport, error) {
 	}
 	report.OutputBytes = max(im.PrimaryOffset+512, im.DataStart+int64(last+1)*int64(im.BlockSize))
 	err = atomicfile.Write(output, func(f *os.File) error {
-		if _, err := io.CopyN(f, io.NewSectionReader(source, 0, st.Size()), st.Size()); err != nil {
+		if _, err := binio.BulkCopyN(f, io.NewSectionReader(source, 0, st.Size()), st.Size()); err != nil {
 			return err
 		}
 		for from, to := range move {

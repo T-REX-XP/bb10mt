@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-10",
+  "patcher": "D:\\Downloads\\v4-neo",
+  "realBuild": "D:\\Downloads\\v4-neo-output\\z30-10.3.3.3216",
+  "toolVersion": "v0.7.0-go.3",
+  "hostExecutables": 6,
+  "foundationBootUnchanged": true,
+  "canonicalPublicCertificateUnchanged": true,
+  "outputChecksumsVerified": 14,
+  "handsetLoginKeyIncluded": false,
+  "firmwareSSHHostKeyIncluded": true,
+  "tests": {
+    "windows": 42,
+    "linuxWSL": 42,
+    "exporterWindows": 2,
+    "actionlint": "passed"
+  },
+  "nativeMacOSExecution": false,
+  "nativeARMExecution": false,
+  "hostedCIExecuted": false,
+  "handsetAcceptance": "not tested",
+  "freshBuild": {
+    "schemaVersion": 1,
+    "patcher": "v4-neo",
+    "toolVersion": "v0.7.0-go.3",
+    "sourceCommit": "fc7bac1ff65ba07f7c486a44d89fe3e92fb7bfaa",
+    "inputSha256": "d83b04dc9bb3e12b9b6a29b05d2aeb6350cabb6fca85866c231609ba575821e2",
+    "snapshotSha256": "d65ec82d3f88732439a126329db6608becbc43930837df3131d79ee5baba62eb",
+    "checks": {
+      "image": {
+        "verifiedFiles": 58,
+        "incorrectLongNames": [],
+        "repaired": false,
+        "superblockCRCVerified": true,
+        "verifiedMetadataPaths": 47
+      },
+      "container": {
+        "osAutoloader": "Z30_10.3.03.3216_STA100-1-2-3-4-5-6_os.exe",
+        "embeddedUFSSHA256": "00c81683aac320b9c4387b4684e8ef2969ca8589d3fa2fdf984abb706be09a7a",
+        "embeddedUFSBytes": 2596012032,
+        "partitions": 5,
+        "containerTrailerCRCVerified": true,
+        "CAPStubAndOverlayPreserved": true,
+        "nonUFSPartitionsPreserved": [
+          8,
+          9,
+          137,
+          6
+        ],
+        "radioUnchangedSHA256": "9af6da88fb44d0c454d29ba871af94b9f2459c578743587e462e1eff5050f1cb",
+        "independentVerifier": "Python standard library",
+        "deviceAcceptance": "not tested"
+      }
+    },
+    "handsetAcceptance": "not tested"
+  }
+}

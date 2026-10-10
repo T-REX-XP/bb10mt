@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bb10root/bb10mt/internal/apperror"
 	"github.com/bb10root/bb10mt/internal/atomicfile"
 	"github.com/bb10root/bb10mt/internal/autoloader"
 	"github.com/bb10root/bb10mt/internal/bar"
@@ -96,13 +97,13 @@ func (f *flags) parse(args []string) error {
 		return e
 	}
 	if f.NArg() != 0 {
-		return fmt.Errorf("unexpected arguments: %s", strings.Join(f.Args(), " "))
+		return apperror.New(apperror.Usage, fmt.Sprintf("unexpected arguments: %s", strings.Join(f.Args(), " ")), "Use <command> --help for supported options.")
 	}
 	return nil
 }
 func require(v, name string) error {
 	if v == "" {
-		return fmt.Errorf("--%s is required", name)
+		return apperror.New(apperror.Usage, fmt.Sprintf("--%s is required", name), "Use <command> --help for an example and options.")
 	}
 	return nil
 }
@@ -228,7 +229,7 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 	args = args[1:]
 	if name == "autoloader" || name == "qnx6" || name == "bar" || name == "raw" || name == "rcfs" || name == "vmdk" || name == "usb" || name == "packages" {
 		if len(args) == 0 {
-			return fmt.Errorf("%s subcommand required", name)
+			return apperror.New(apperror.Usage, name+" subcommand required", "Run bb10mt --help to list commands.")
 		}
 		name += " " + args[0]
 		args = args[1:]
@@ -902,13 +903,24 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 			})
 		}
 	default:
-		return fmt.Errorf("command %q has not been migrated; see docs/MIGRATION.md", name)
+		return apperror.New(apperror.Usage, fmt.Sprintf("unknown or unsupported command %q", name), "Run bb10mt --help to list supported commands.")
 	}
 	if e := f.parse(args); e != nil {
 		if e == flag.ErrHelp {
 			return nil
 		}
-		return e
+		return apperror.New(apperror.Usage, e.Error(), "Use <command> --help for supported options.")
 	}
-	return run()
+	if f.output != "" {
+		if _, err := os.Lstat(f.output); err == nil {
+			return apperror.New(apperror.OutputExists, "Output already exists: "+f.output, "Choose a NEW file or subfolder; existing output is preserved.")
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+	}
+	err := run()
+	if err != nil && apperror.Classify(err).Code == apperror.Validation && (strings.Contains(name, "verify") || strings.Contains(name, "fsck") || strings.Contains(name, "audit")) {
+		return apperror.New(apperror.Verification, err.Error(), "Do not use the failed artifact; restore a known-good input and inspect the diagnostic.")
+	}
+	return err
 }

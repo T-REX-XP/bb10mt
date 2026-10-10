@@ -233,7 +233,7 @@ func bundleTarget(runtimeRoot, buildDir, goos, arch, binary, version string) (st
 		}
 	}
 	payload := filepath.Join(buildDir, "payload.zip")
-	if err := runtimebundle.Pack(root, payload, goos+"-"+arch, filepath.ToSlash(app), loader); err != nil {
+	if err := runtimebundle.PackVersion(root, payload, goos+"-"+arch, filepath.ToSlash(app), loader, version); err != nil {
 		return "", err
 	}
 	placeholder, err := filepath.Abs("cmd/launcher/payload.zip")

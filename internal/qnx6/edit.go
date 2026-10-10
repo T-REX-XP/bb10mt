@@ -63,7 +63,15 @@ func (e *Editor) writeAt(b []byte, off int64) error {
 	if _, err := e.File.WriteAt(b, off); err != nil {
 		return err
 	}
-	clear(e.cache)
+	// Only blocks overlapping this write become stale. Clearing the whole
+	// cache discarded unchanged parent directories and inode tables after every
+	// mutation, turning recursive removals into repeated disk scans.
+	end := off + int64(len(b))
+	for cachedOff := range e.cache {
+		if off < cachedOff+int64(e.BlockSize) && cachedOff < end {
+			delete(e.cache, cachedOff)
+		}
+	}
 	if off+int64(len(b)) > e.R.Size {
 		e.R.Size = off + int64(len(b))
 	}

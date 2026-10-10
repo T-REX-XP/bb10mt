@@ -129,3 +129,40 @@ func TestEditorDoubleIndirectAndManyLongNames(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestWriteInvalidatesOnlyOverlappingBlocks(t *testing.T) {
+	e, _ := editor(t)
+	clear(e.cache)
+	start := e.DataStart
+	bs := int64(e.BlockSize)
+	for i := int64(0); i < 3; i++ {
+		if _, err := e.cached(start + i*bs); err != nil {
+			t.Fatal(err)
+		}
+	}
+	untouched := e.cache[start+2*bs]
+	// A two-byte write straddles a block boundary and must evict both blocks.
+	if err := e.writeAt([]byte{31, 32}, start+bs-1); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := e.cache[start]; ok {
+		t.Fatal("first overlapping block retained")
+	}
+	if _, ok := e.cache[start+bs]; ok {
+		t.Fatal("second overlapping block retained")
+	}
+	if !bytes.Equal(e.cache[start+2*bs], untouched) || len(e.cache) != 1 {
+		t.Fatal("unrelated cache entry discarded")
+	}
+	a, err := e.cached(start)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := e.cached(start + bs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a[bs-1] != 31 || b[0] != 32 {
+		t.Fatal("stale cache data after write")
+	}
+}

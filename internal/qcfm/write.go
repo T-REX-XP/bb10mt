@@ -1,6 +1,7 @@
 package qcfm
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"hash/crc32"
@@ -27,11 +28,12 @@ type source struct {
 func scan(s *source, fast bool) error {
 	buf := make([]byte, BlockSize)
 	h := crc32.NewIEEE()
+	reader := bufio.NewReaderSize(io.NewSectionReader(s.file, 0, s.size), 4<<20)
 	var idx uint64
 	for off := int64(0); off < s.size; off += BlockSize {
 		n := int(min(int64(BlockSize), s.size-off))
 		clear(buf)
-		if _, e := s.file.ReadAt(buf[:n], off); e != nil {
+		if _, e := io.ReadFull(reader, buf[:n]); e != nil {
 			return e
 		}
 		_, _ = h.Write(buf[:n])
@@ -184,18 +186,20 @@ func Pack(path string, inputs []Input, opt Options) error {
 		if _, e := w.Write(h); e != nil {
 			return e
 		}
-		buf := make([]byte, BlockSize)
+		padding := make([]byte, BlockSize)
 		for _, s := range src {
 			for _, r := range s.runs {
-				for j := uint32(0); j < r.Count; j++ {
-					off := (int64(r.Offset) + int64(j)) * BlockSize
-					n := int(min(int64(BlockSize), s.size-off))
-					clear(buf)
-					if _, e := s.file.ReadAt(buf[:n], off); e != nil {
-						return e
-					}
-					if _, e := w.Write(buf); e != nil {
-						return e
+				off := int64(r.Offset) * BlockSize
+				extent := int64(r.Count) * BlockSize
+				n := min(extent, s.size-off)
+				if _, err := binio.BulkCopyN(w, io.NewSectionReader(s.file, off, n), n); err != nil {
+					return err
+				}
+				// QCFM represents whole blocks. Only the final partial input
+				// block is zero-padded; erased gaps remain sparse run offsets.
+				if n < extent {
+					if _, err := w.Write(padding[:extent-n]); err != nil {
+						return err
 					}
 				}
 			}
@@ -208,7 +212,7 @@ func Pack(path string, inputs []Input, opt Options) error {
 				return fmt.Errorf("input changed while packing")
 			}
 			check := crc32.NewIEEE()
-			if _, e = io.Copy(check, io.NewSectionReader(s.file, 0, s.size)); e != nil {
+			if _, e = binio.BulkCopyN(check, io.NewSectionReader(s.file, 0, s.size), s.size); e != nil {
 				return e
 			}
 			if check.Sum32() != s.digest {

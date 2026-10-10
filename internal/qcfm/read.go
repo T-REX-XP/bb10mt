@@ -187,7 +187,7 @@ func Read(r binio.Reader) (Container, error) {
 		// signature bytes. CRC verifies transport integrity, never authenticity.
 		if bytes.Equal(sig[:40], signature[:40]) && bytes.Equal(sig[188:228], signature[188:228]) && bytes.Equal(sig[376:416], signature[376:416]) {
 			h := crc32.NewIEEE()
-			if _, e = io.Copy(h, io.NewSectionReader(r.ReaderAt, 0, r.Size-4)); e != nil {
+			if _, e = binio.BulkCopyN(h, io.NewSectionReader(r.ReaderAt, 0, r.Size-4), r.Size-4); e != nil {
 				return c, e
 			}
 			if h.Sum32() != binio.U32(sig, 556) {
@@ -240,7 +240,7 @@ func Extract(r binio.Reader, ch Chunk, v1 bool, w io.Writer) error {
 			pos += n
 		}
 		n := int64(v.Count) * int64(ch.BlockSize)
-		if _, e := io.CopyN(w, io.NewSectionReader(r.ReaderAt, src, n), n); e != nil {
+		if _, e := binio.BulkCopyN(w, io.NewSectionReader(r.ReaderAt, src, n), n); e != nil {
 			return e
 		}
 		src += n

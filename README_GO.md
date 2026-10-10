@@ -18,7 +18,7 @@ require recompiling the single binary.
 ```
 go test ./...
 go vet ./...
-go build -trimpath -o bin/bb10mt-go.exe ./cmd/bb10mt
+go run ./cmd/build --output bin/bb10mt-dev.exe
 ```
 
 Examples (use a new output path for every operation):
@@ -72,7 +72,7 @@ Checksum and offline image checks do not establish handset boot acceptance.
 
 Direct executables and release archives are produced with
 `python scripts/vendor_runtime.py`, then
-`go run ./cmd/release --version v0.7.0-go.2 --output dist`. Builds cover Windows/Linux/macOS on amd64 and arm64. The release
+`go run ./cmd/release --output dist`. Builds cover Windows/Linux/macOS on amd64 and arm64. The release
 tool emits deterministic archives, SHA256SUMS, a dependency inventory, a
 CycloneDX SBOM and required licenses. CI includes Windows/Linux/macOS race tests,
 parser fuzzing, kernel FUSE transactions, vulnerability scans, six cross-builds,
@@ -81,6 +81,22 @@ prerelease provenance. Hosted CI has not been run from this local checkout.
 All module-graph checksums are committed. If dependency maintenance has removed
 auxiliary hashes, run `go mod download all` before packaging; missing or invalid
 module hashes make the release command fail.
+
+Every supported tool build reserves a higher `vMAJOR.MINOR.PATCH-go.NUMBER`
+before compiling. `VERSION` is the committed seed; `.build-version.json` stores
+the last allocation locally. Keep this state between builds. Failed compilation
+consumes its number; parallel reservations are locked. `--version` may choose a
+new higher series/number but cannot reuse or lower the stored version. All six
+targets in a release share that one allocation. CI additionally embeds its run,
+attempt and job identity as `+build.*`, so clean-checkout reruns have distinct
+versions. `build-version.json`, SBOM and embedded runtime manifests record the
+result. Bare `go build` bypasses this allocator and produces an unversioned
+development executable; use `cmd/build` or `cmd/release` for delivered tools.
+
+Errors include a symbolic name, stable numeric exit code and recovery hint.
+See [error codes](docs/ERROR_CODES.md). Batch builds report named stages and
+elapsed time; the v4-neo wrapper streams them and adds byte-based SHA256 progress
+and heartbeats while a child is busy. It never invents an overall percentage.
 
 Choose the executable for your OS and CPU: `bb10mt-VERSION-windows-amd64.exe`
 or `windows-arm64.exe`, `bb10mt-VERSION-linux-amd64` or `linux-arm64`, and

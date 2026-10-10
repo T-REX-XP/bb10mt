@@ -12,7 +12,7 @@ import (
 // filesystems. Unsupported filesystems fail instead of weakening that guarantee.
 func Write(path string, build func(*os.File) error) (err error) {
 	if _, e := os.Lstat(path); e == nil {
-		return fmt.Errorf("output already exists: %s", path)
+		return fmt.Errorf("output already exists: %s: %w", path, os.ErrExist)
 	} else if !os.IsNotExist(e) {
 		return e
 	}

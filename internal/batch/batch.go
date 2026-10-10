@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bb10root/bb10mt/internal/atomicfile"
 	"github.com/bb10root/bb10mt/internal/autoloader"
@@ -52,11 +53,16 @@ func BuildWithOptions(input, script, output string, log io.Writer, opt Options) 
 // BuildWithTransform reuses the verified CAP transaction for a declarative
 // image transform. The callback must publish a new, verified target image.
 func BuildWithTransform(input, output string, log io.Writer, opt Options, transform func(string, string) error, checks []string) error {
+	started := time.Now()
+	progress := func(format string, args ...any) {
+		fmt.Fprintf(log, "[bb10mt +%.1fs] %s\n", time.Since(started).Seconds(), fmt.Sprintf(format, args...))
+	}
+	progress("Stage 1/8: validating input CAP and source container CRCs")
 	if transform == nil {
 		return fmt.Errorf("image transform required")
 	}
 	if _, err := os.Lstat(output); err == nil {
-		return fmt.Errorf("output already exists")
+		return fmt.Errorf("output already exists: %s: %w", output, os.ErrExist)
 	} else if !os.IsNotExist(err) {
 		return err
 	}
@@ -122,8 +128,10 @@ func BuildWithTransform(input, output string, log io.Writer, opt Options, transf
 	list := []string{}
 	imagePath := ""
 	section := io.NewSectionReader(f, osBundle.span.Offset, osBundle.span.Size)
+	progress("Stage 2/8: extracting %d OS partitions", len(osBundle.container.V2))
 	cr := binio.Reader{ReaderAt: section, Size: osBundle.span.Size}
 	for i, ch := range osBundle.container.V2 {
+		progress("Extract partition %d/%d (type %d)", i+1, len(osBundle.container.V2), ch.Type)
 		ext := qcfm.Extension(ch.Type)
 		if ext == ".unk" {
 			return fmt.Errorf("unsupported partition type %d", ch.Type)
@@ -156,10 +164,12 @@ func BuildWithTransform(input, output string, log io.Writer, opt Options, transf
 		return fmt.Errorf("missing QNX6 partition")
 	}
 	repaired := filepath.Join(stage, ".source-checked.ufs")
+	progress("Stage 3/8: checking source filesystem and repairing names/free counts")
 	if _, err = qnx6.Repair(imagePath, repaired); err != nil {
 		return fmt.Errorf("source image check: %w", err)
 	}
 	patched := filepath.Join(stage, ".patched.ufs")
+	progress("Stage 4/8: applying patch and verifying filesystem/payloads")
 	if err = transform(repaired, patched); err != nil {
 		return err
 	}
@@ -189,10 +199,12 @@ func BuildWithTransform(input, output string, log io.Writer, opt Options, transf
 	}
 	version := osBundle.container.Version
 	packed := filepath.Join(stage, stem+".unsigned")
+	progress("Stage 5/8: scanning sparse runs and packing QCFM with CRC verification")
 	if err = qcfm.Pack(packed, partitions, qcfm.Options{Version: version, Sign: true}); err != nil {
 		return err
 	}
 	osPath := filepath.Join(stage, stem+"_os.exe")
+	progress("Stage 6/8: creating and validating the OS autoloader")
 	if err = autoloader.Create(osPath, capPath, []string{packed}, cap.Version); err != nil {
 		return err
 	}
@@ -202,9 +214,10 @@ func BuildWithTransform(input, output string, log io.Writer, opt Options, transf
 		report.Checks = append(report.Checks, "compaction filesystem and all allocated inode SHA256")
 	}
 	if radio != nil {
+		progress("Stage 7/8: preserving and validating the original radio bundle")
 		radioPath := filepath.Join(stage, stem+".radio.signed")
 		if err = atomicfile.Write(radioPath, func(out *os.File) error {
-			_, err := io.CopyN(out, io.NewSectionReader(f, radio.span.Offset, radio.span.Size), radio.span.Size)
+			_, err := binio.BulkCopyN(out, io.NewSectionReader(f, radio.span.Offset, radio.span.Size), radio.span.Size)
 			return err
 		}); err != nil {
 			return err
@@ -214,6 +227,9 @@ func BuildWithTransform(input, output string, log io.Writer, opt Options, transf
 			return err
 		}
 		report.Radio = filepath.Base(loader)
+	}
+	if radio == nil {
+		progress("Stage 7/8: input has no radio bundle")
 	}
 	if err = os.Remove(capPath); err != nil {
 		return err
@@ -225,5 +241,10 @@ func BuildWithTransform(input, output string, log io.Writer, opt Options, transf
 	}); err != nil {
 		return err
 	}
-	return atomicfile.PublishDirectory(stage, output)
+	progress("Stage 8/8: publishing checked firmware directory")
+	err = atomicfile.PublishDirectory(stage, output)
+	if err == nil {
+		progress("Build complete: %s", output)
+	}
+	return err
 }

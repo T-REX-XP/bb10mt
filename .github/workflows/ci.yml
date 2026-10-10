@@ -32,6 +32,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'go test failed' }
       - name: Catalog exporter path and publication tests
         run: python -B scripts/test_export_weather_packages.py
+      - name: v4-neo wrapper failure and publication tests
+        run: python -B -m unittest discover -s patchers/v4-neo/tests
+      - name: Independent CAP verifier corruption tests
+        run: python -B scripts/test_verify_real_build.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-${{ matrix.os }}
@@ -58,6 +62,8 @@ jobs:
   packages:
     needs: [test, fuzz, fuse, security]
     runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.build.outputs.version }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
@@ -66,7 +72,10 @@ jobs:
           cache: false
       - run: sudo apt-get update && sudo apt-get install --yes 7zip
       - run: python3 scripts/vendor_runtime.py
-      - run: go run ./cmd/release --version v0.0.0-ci --output dist
+      - id: build
+        run: |
+          go run ./cmd/release --output dist
+          echo "version=$(python3 -c 'import json; print(json.load(open("dist/build-version.json"))["version"])')" >> "$GITHUB_OUTPUT"
       - run: cd dist && sha256sum --check SHA256SUMS
       - run: python3 scripts/verify_bundled_release.py dist
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -100,10 +109,10 @@ jobs:
           path: dist
       - name: Verify, extract, launch, enumerate USB and reject changed cache
         shell: pwsh
-        run: python scripts/smoke_bundle.py --binary dist/bb10mt-v0.0.0-ci-${{ matrix.target }} --usb
+        run: python scripts/smoke_bundle.py --binary dist/bb10mt-${{ needs.packages.outputs.version }}-${{ matrix.target }} --usb
       - name: Bundled FUSE transaction
         if: runner.os == 'Linux'
-        run: sudo python3 scripts/smoke_bundle.py --binary dist/bb10mt-v0.0.0-ci-${{ matrix.target }} --fuse --empty-root
+        run: sudo python3 scripts/smoke_bundle.py --binary dist/bb10mt-${{ needs.packages.outputs.version }}-${{ matrix.target }} --fuse --empty-root
   fuse:
     runs-on: ubuntu-24.04
     steps:

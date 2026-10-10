@@ -268,14 +268,14 @@ func Create(output, capPath string, inputs []string, version int) error {
 		off += n
 	}
 	return atomicfile.Write(output, func(out *os.File) error {
-		if _, e := io.CopyN(out, io.NewSectionReader(cap, 0, capSize), capSize); e != nil {
+		if _, e := binio.BulkCopyN(out, io.NewSectionReader(cap, 0, capSize), capSize); e != nil {
 			return e
 		}
 		if _, e := out.Write(tail); e != nil {
 			return e
 		}
 		for i, f := range files {
-			if _, e := io.CopyN(out, io.NewSectionReader(f, 0, sizes[i]), sizes[i]); e != nil {
+			if _, e := binio.BulkCopyN(out, io.NewSectionReader(f, 0, sizes[i]), sizes[i]); e != nil {
 				return e
 			}
 		}
@@ -314,7 +314,7 @@ func ExtractCAP(input, output string) error {
 		return e
 	}
 	return atomicfile.Write(output, func(out *os.File) error {
-		_, e := io.CopyN(out, io.NewSectionReader(f, 0, h.SignatureOffset), h.SignatureOffset)
+		_, e := binio.BulkCopyN(out, io.NewSectionReader(f, 0, h.SignatureOffset), h.SignatureOffset)
 		return e
 	})
 }

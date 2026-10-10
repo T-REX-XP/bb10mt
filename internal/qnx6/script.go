@@ -527,7 +527,7 @@ func ScriptWithOptions(input, script, output string, log io.Writer, opt ScriptOp
 		return err
 	}
 	return atomicfile.Write(output, func(f *os.File) error {
-		if _, err := io.CopyN(f, io.NewSectionReader(source, 0, st.Size()), st.Size()); err != nil {
+		if _, err := binio.BulkCopyN(f, io.NewSectionReader(source, 0, st.Size()), st.Size()); err != nil {
 			return err
 		}
 		editor, err := NewEditor(f)

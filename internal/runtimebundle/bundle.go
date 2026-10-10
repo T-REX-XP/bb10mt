@@ -29,6 +29,7 @@ type File struct {
 }
 type Manifest struct {
 	Schema      int    `json:"schema"`
+	Version     string `json:"version,omitempty"`
 	Target      string `json:"target"`
 	Application string `json:"application"`
 	Loader      string `json:"loader,omitempty"`
@@ -41,7 +42,11 @@ func validPath(name string) bool {
 
 // Pack records every payload file, with deterministic modes and SHA256 hashes.
 func Pack(root, output, target, app, loader string) error {
-	m := Manifest{Schema: 1, Target: target, Application: app, Loader: loader}
+	return PackVersion(root, output, target, app, loader, "")
+}
+
+func PackVersion(root, output, target, app, loader, version string) error {
+	m := Manifest{Schema: 1, Version: version, Target: target, Application: app, Loader: loader}
 	var entries []release.Entry
 	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {

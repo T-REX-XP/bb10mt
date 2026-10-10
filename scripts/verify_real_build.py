@@ -89,6 +89,47 @@ def qcfm(f, base, end):
     return chunks
 
 
+def logical_digest(f, chunk):
+    _, block, pos, runs = chunk
+    h, logical = hashlib.sha256(), 0
+    fill = b'\xff' * (4 << 20)
+    for first, count in runs:
+        missing = first * block - logical
+        assert missing >= 0
+        while missing:
+            n = min(missing, len(fill))
+            h.update(fill[:n])
+            missing -= n
+        size = count * block
+        while size:
+            data = read(f, pos, min(size, 4 << 20))
+            h.update(data)
+            pos += len(data)
+            size -= len(data)
+        logical = (first + count) * block
+    return logical, h.hexdigest()
+
+
+def classify_sources(f, sources):
+    os_chunks, radio_source = None, None
+    for span in sources:
+        chunks = qcfm(f, *span)
+        types = [c[0] for c in chunks]
+        if 5 in types:
+            if os_chunks is not None or types.count(5) != 1 or 12 in types:
+                raise ValueError('ambiguous source OS bundle')
+            os_chunks = chunks
+        elif 12 in types:
+            if radio_source is not None:
+                raise ValueError('ambiguous source radio bundle')
+            radio_source = span
+        else:
+            raise ValueError('unclassified source bundle')
+    if os_chunks is None:
+        raise ValueError('missing source OS bundle')
+    return os_chunks, radio_source
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=pathlib.Path, required=True)
@@ -110,44 +151,37 @@ def main():
         stub_hash = digest_range(original, 0, stub)
         assert stub_hash == digest_range(output, 0, stub)
         assert len(files) == 1 and len(sources) in (1, 2)
+        source_chunks, source_radio = classify_sources(original, sources)
         radio_hash = None
-        if len(sources) == 2:
+        if source_radio is not None:
             if radio_path is None:
                 raise ValueError("missing radio output")
             radio = stack.enter_context(radio_path.open("rb"))
             radio_stub, radios = cap(radio)
             assert radio_stub == stub and len(radios) == 1
             assert stub_hash == digest_range(radio, 0, stub)
-            a, b = sources[1]
+            a, b = source_radio
             c, d = radios[0]
             radio_hash = digest_range(original, a, b - a)
             assert b - a == d - c and radio_hash == digest_range(radio, c, d - c)
+            qcfm(radio, c, d)
         elif radio_path is not None:
             raise ValueError("unexpected radio output")
         chunks = qcfm(output, *files[0])
-        _, block, pos, runs = next(c for c in chunks if c[0] == 5)
-        h, logical = hashlib.sha256(), 0
-        fill = b"\xff" * (4 << 20)
-        for first, count in runs:
-            missing = first * block - logical
-            assert missing >= 0
-            while missing:
-                n = min(missing, len(fill))
-                h.update(fill[:n])
-                missing -= n
-            size = count * block
-            while size:
-                data = read(output, pos, min(size, 4 << 20))
-                h.update(data)
-                pos += len(data)
-                size -= len(data)
-            logical = (first + count) * block
+        assert [c[0] for c in chunks] == [c[0] for c in source_chunks], 'partition order/types changed'
+        preserved = []
+        for before, after in zip(source_chunks, chunks):
+            if before[0] != 5:
+                assert logical_digest(original, before) == logical_digest(output, after), 'non-UFS partition changed'
+                preserved.append(before[0])
+        logical, embedded_hash = logical_digest(output, next(c for c in chunks if c[0] == 5))
         with ufs.open("rb") as image:
             image_hash = digest_range(image, 0, ufs.stat().st_size)
-        assert logical == ufs.stat().st_size and h.hexdigest() == image_hash
+        assert logical == ufs.stat().st_size and embedded_hash == image_hash
     report = {"osAutoloader": os_path.name, "embeddedUFSSHA256": image_hash,
               "embeddedUFSBytes": logical, "partitions": len(chunks),
               "containerTrailerCRCVerified": True, "CAPStubAndOverlayPreserved": True,
+              "nonUFSPartitionsPreserved": preserved,
               "radioUnchangedSHA256": radio_hash, "independentVerifier": "Python standard library",
               "deviceAcceptance": "not tested"}
     args.report.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

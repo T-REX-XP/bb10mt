@@ -2,36 +2,35 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"sort"
 	"strings"
 
+	"github.com/bb10root/bb10mt/internal/apperror"
 	"github.com/bb10root/bb10mt/internal/atomicfile"
+	"github.com/bb10root/bb10mt/internal/buildversion"
 	"github.com/bb10root/bb10mt/internal/release"
 )
 
 func main() {
 	if e := run(); e != nil {
-		fmt.Fprintln(os.Stderr, "error:", e)
-		os.Exit(1)
+		os.Exit(apperror.Print(os.Stderr, e))
 	}
 }
 func run() error {
-	version := flag.String("version", "", "Release version (e.g. v0.7.0-go.1)")
+	version := flag.String("version", "", "Reserve this NEW version, or omit to increment automatically")
+	buildID := flag.String("build-id", "", "Optional unique CI build identity (also taken from GitHub Actions)")
 	output := flag.String("output", "dist", "New output directory")
 	runtimeRoot := flag.String("runtime-root", "out/runtimes", "Verified runtime inputs prepared by scripts/vendor_runtime.py")
 	flag.Parse()
-	if !regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.]+)?$`).MatchString(*version) {
-		return fmt.Errorf("invalid release version")
-	}
 	if _, e := os.Lstat(*output); e == nil {
-		return fmt.Errorf("output already exists")
+		return apperror.New(apperror.OutputExists, "output already exists: "+*output, "Choose a new release output directory.")
 	} else if !os.IsNotExist(e) {
 		return e
 	}
@@ -40,6 +39,22 @@ func run() error {
 		return e
 	}
 	defer os.RemoveAll(tmp)
+	if *buildID == "" && os.Getenv("GITHUB_RUN_ID") != "" {
+		*buildID = os.Getenv("GITHUB_RUN_ID") + "." + os.Getenv("GITHUB_RUN_ATTEMPT") + "." + os.Getenv("GITHUB_JOB")
+	}
+	record, e := buildversion.Reserve("VERSION", ".build-version.json", *version, *buildID)
+	if e != nil {
+		return apperror.New(apperror.Version, e.Error(), "Keep the build counter state; omit --version for the next available version.")
+	}
+	*version = record.Version
+	fmt.Printf("Building %s (previous allocation %s)\n", *version, record.Previous)
+	versionData, e := json.MarshalIndent(record, "", "  ")
+	if e != nil {
+		return e
+	}
+	if e = os.WriteFile(filepath.Join(tmp, "build-version.json"), append(versionData, '\n'), 0644); e != nil {
+		return e
+	}
 	// Record a portable, deterministic module inventory. Host paths and module
 	// cache timestamps must not leak into release artifacts.
 	list := exec.Command("go", "list", "-m", "-json", "all")
@@ -78,7 +93,7 @@ func run() error {
 			return err
 		}
 		entries := []release.Entry{{Name: binary, Source: bin, Mode: 0755}}
-		for _, name := range []string{"LICENSE", "README_GO.md", "bb10mt.ini", "docs/BUNDLED_RUNTIME.md", "docs/PACKAGES.md", "docs/PACKAGE_BUILD_VALIDATION.json", "docs/PACKAGE_CAP_VALIDATION.json", "docs/PACKAGE_CAP_IMAGE_VALIDATION.json", "scripts/export_weather_packages.py", "docs/MIGRATION.md", "docs/COMPATIBILITY.md", "docs/VALIDATION.md", "docs/REAL_IMAGE_VALIDATION.json", "docs/REAL_BUILD_VALIDATION.json", "docs/WRAPPER_BUILD_VALIDATION.json", "THIRD_PARTY_NOTICES.md"} {
+		for _, name := range []string{"LICENSE", "README_GO.md", "bb10mt.ini", "docs/BUNDLED_RUNTIME.md", "docs/ERROR_CODES.md", "docs/PACKAGES.md", "docs/PACKAGE_BUILD_VALIDATION.json", "docs/PACKAGE_CAP_VALIDATION.json", "docs/PACKAGE_CAP_IMAGE_VALIDATION.json", "scripts/export_weather_packages.py", "docs/MIGRATION.md", "docs/COMPATIBILITY.md", "docs/VALIDATION.md", "docs/REAL_IMAGE_VALIDATION.json", "docs/REAL_BUILD_VALIDATION.json", "docs/WRAPPER_BUILD_VALIDATION.json", "THIRD_PARTY_NOTICES.md"} {
 			source, err := stageText(name, path)
 			if err != nil {
 				return err
@@ -160,7 +175,7 @@ func run() error {
 	if e = atomicfile.Write(sbomPath, func(f *os.File) error { _, e := f.Write(sbom); return e }); e != nil {
 		return e
 	}
-	for _, name := range []string{"sbom.cdx.json", "DEPENDENCIES.md", "runtime.lock.json", "runtime-sources.zip"} {
+	for _, name := range []string{"sbom.cdx.json", "DEPENDENCIES.md", "runtime.lock.json", "runtime-sources.zip", "build-version.json"} {
 		digest, e := release.SHA256(filepath.Join(tmp, name))
 		if e != nil {
 			return e

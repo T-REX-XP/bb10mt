@@ -158,3 +158,25 @@ func TestPackDeterministic(t *testing.T) {
 		t.Fatal("payload is not reproducible")
 	}
 }
+
+func TestVersionedManifest(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "app"), []byte("native"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	archive := filepath.Join(t.TempDir(), "runtime.zip")
+	if err := PackVersion(root, archive, "test", "app", "", "v0.7.0-go.5"); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(archive)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := Open(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.Manifest.Version != "v0.7.0-go.5" {
+		t.Fatal(b.Manifest.Version)
+	}
+}
