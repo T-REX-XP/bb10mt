@@ -36,15 +36,16 @@ foundation, verifies the final filesystem and compares autoloader contents,
 and publishes once. It checks CAP/container CRCs, embedded filesystem equality,
 payload SHA256, pathname checksums, superblock CRC and service permissions.
 Radio output is produced only when the source includes a radio bundle.
-`neo-acceptance.json`, `container-verification.json`, `neo-build.log` and
-`SHA256SUMS` accompany the Go report and firmware files. Existing outputs are
-never replaced. On failure, look for `<output>.failed.log`.
+Successful builds automatically remove unpacked partitions, temporary containers,
+reports and logs, retaining only `_os.exe` and, when present, `_radio.exe` in the
+output folder. Verification results and final EXE SHA256 values appear in the
+console. Existing outputs are never replaced. On failure, look for
+`<output>.failed.log`.
 
 App World requires the QNX6 filename checksum for
 `libAppWorldStoreFront.so.1.0.0` to be valid. A checksum repair to a loose `.ufs`
 does not update an already packed `_os.exe`. The final gate rejects that stale
-autoloader even when its container CRC passes; acceptance records
-`embeddedUFSMatchesImage: true`. Build from the original firmware into a new
+autoloader even when its container CRC passes. Build from the original firmware into a new
 directory with the command above. Existing firmware outputs are not repaired
 by updating this patcher folder.
 

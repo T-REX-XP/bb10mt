@@ -116,7 +116,7 @@ func patcherFixture(t *testing.T) (string, patcherLock) {
 	return root, lock
 }
 
-func patcherInput(t *testing.T, dir string) string {
+func patcherInput(t *testing.T, dir string, withRadio ...bool) string {
 	t.Helper()
 	image := filepath.Join(dir, "input.ufs")
 	if err := qnx6.Mkfs(image, 1024, 128, 4096); err != nil {
@@ -144,54 +144,78 @@ func patcherInput(t *testing.T, dir string) string {
 		t.Fatal(err)
 	}
 	input := filepath.Join(dir, "firmware.exe")
-	if err := autoloader.Create(input, stub, []string{packed}, 2); err != nil {
+	bundles := []string{packed}
+	if len(withRadio) > 0 && withRadio[0] {
+		radio := filepath.Join(dir, "input.radio.rcfs")
+		if err := os.WriteFile(radio, []byte("unchanged radio fixture"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		radioBundle := filepath.Join(dir, "radio.signed")
+		if err := qcfm.Pack(radioBundle, []qcfm.Input{{Path: radio}}, qcfm.Options{Version: 2, Sign: true}); err != nil {
+			t.Fatal(err)
+		}
+		bundles = append(bundles, radioBundle)
+	}
+	if err := autoloader.Create(input, stub, bundles, 2); err != nil {
 		t.Fatal(err)
 	}
 	return input
 }
 
 func TestPatcherNativeBuild(t *testing.T) {
-	root, lock := patcherFixture(t)
-	dir := t.TempDir()
-	input := patcherInput(t, dir)
-	output := filepath.Join(dir, "new output")
-	before, err := fileDigest(input, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var progress bytes.Buffer
-	if err := buildPatcher(root, input, output, lock.ToolVersion, &progress); err != nil {
-		t.Fatal(err, progress.String())
-	}
-	after, err := fileDigest(input, nil)
-	if err != nil || before != after {
-		t.Fatal("input changed", err)
-	}
-	for _, name := range []string{"neo-acceptance.json", "container-verification.json", "snapshot-used.json", "neo-build.log", "SHA256SUMS"} {
-		if _, err := os.Stat(filepath.Join(output, name)); err != nil {
-			t.Fatal(err)
+	for _, withRadio := range []bool{false, true} {
+		name := "OS only"
+		if withRadio {
+			name = "OS and radio"
 		}
-	}
-	var report map[string]any
-	if err := packJSON(output, "container-verification.json", &report); err != nil || report["embeddedUFSMatchesImage"] != true {
-		t.Fatal(report, err)
-	}
-	if !strings.Contains(progress.String(), "Phase 6/6") || !strings.Contains(progress.String(), "Stage 8/8") {
-		t.Fatal(progress.String())
-	}
-	sums, err := os.ReadFile(filepath.Join(output, "SHA256SUMS"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, line := range strings.Split(strings.TrimSpace(string(sums)), "\n") {
-		digest, name, _ := strings.Cut(line, "  ")
-		actual, err := fileDigest(filepath.Join(output, name), nil)
-		if err != nil || actual != digest {
-			t.Fatal(name, err)
-		}
-	}
-	if err := buildPatcher(root, input, output, lock.ToolVersion, io.Discard); apperror.Classify(err).Code != 4 {
-		t.Fatal(err)
+		t.Run(name, func(t *testing.T) {
+			root, lock := patcherFixture(t)
+			dir := t.TempDir()
+			input := patcherInput(t, dir, withRadio)
+			output := filepath.Join(dir, "new output")
+			before, err := fileDigest(input, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var progress bytes.Buffer
+			if err := buildPatcher(root, input, output, lock.ToolVersion, &progress); err != nil {
+				t.Fatal(err, progress.String())
+			}
+			after, err := fileDigest(input, nil)
+			if err != nil || before != after {
+				t.Fatal("input changed", err)
+			}
+			if !strings.Contains(progress.String(), "Phase 6/6") || !strings.Contains(progress.String(), "Stage 8/8") || !strings.Contains(progress.String(), "embedded UFS equality") {
+				t.Fatal(progress.String())
+			}
+			entries, err := os.ReadDir(output)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := []string{"firmware_os.exe"}
+			if withRadio {
+				want = append(want, "firmware_radio.exe")
+			}
+			if len(entries) != len(want) {
+				t.Fatal("unpacked files retained", entries)
+			}
+			for i, name := range want {
+				if entries[i].Name() != name || !entries[i].Type().IsRegular() {
+					t.Fatal("unexpected delivery", entries)
+				}
+				digest, err := fileDigest(filepath.Join(output, name), nil)
+				if err != nil || !strings.Contains(progress.String(), "SHA256 "+name+": "+digest) {
+					t.Fatal("missing autoloader hash", name, err)
+				}
+			}
+			stages, _ := filepath.Glob(filepath.Join(dir, ".v4-neo-*"))
+			if len(stages) != 0 {
+				t.Fatal("intermediate staging retained", stages)
+			}
+			if err := buildPatcher(root, input, output, lock.ToolVersion, io.Discard); apperror.Classify(err).Code != 4 {
+				t.Fatal(err)
+			}
+		})
 	}
 }
 

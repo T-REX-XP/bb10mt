@@ -27,8 +27,10 @@ Go repairs the source filesystem before applying the script and packs only
 the checked final image. Check every maintained public payload,
 its pathname checksums and service permissions, the superblock CRC, CAP stub
 and offset table, packed trailer CRC, embedded UFS equality and unchanged
-radio bundle. Recheck the source hash and emit an acceptance record and output
-SHA256 sums. Publish the complete directory atomically without replacement.
+radio bundle. Recheck the source hash and print verification results and final
+EXE SHA256 values. Move the checked OS/radio EXEs into a private delivery
+directory, remove unpacked partitions and intermediate containers, then publish
+only the EXEs atomically without replacement.
 There is no post-pack mutation or second OS repacking pass.
 
 Failed builds remove their temporary output and leave the input and existing

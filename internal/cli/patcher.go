@@ -622,9 +622,6 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 	if err != nil {
 		return apperror.New(apperror.Verification, err.Error(), "Do not use failed artifacts; inspect the failure log.")
 	}
-	if err = writePackJSON(filepath.Join(result, "container-verification.json"), container); err != nil {
-		return err
-	}
 	fmt.Fprintln(progress, "Phase 5/6: rechecking input/snapshot and recording output SHA256")
 	after, err := fileDigest(input, progress)
 	if err != nil {
@@ -649,46 +646,36 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 			metadata++
 		}
 	}
-	snapshotHash, err := fileDigest(filepath.Join(root, "neo.lock.json"), nil)
-	if err != nil {
+	fmt.Fprintf(progress, "Verified %d payloads, %d metadata paths, filesystem and embedded UFS equality; handset acceptance not tested\n", payloads, metadata)
+	fmt.Fprintln(progress, "Phase 6/6: hashing autoloaders, removing intermediates and publishing checked firmware")
+	// Publish only the verified autoloaders. Loose partitions and reports stay
+	// private and are removed before publication; failed builds keep their log.
+	delivery := filepath.Join(stage, "delivery")
+	if err = os.Mkdir(delivery, 0700); err != nil {
 		return err
 	}
-	acceptance := map[string]any{"schemaVersion": 1, "patcher": "v4-neo", "toolVersion": version, "sourceCommit": lock.SourceCommit, "inputSha256": inputHash, "snapshotSha256": snapshotHash, "checks": map[string]any{"image": map[string]any{"verifiedFiles": payloads, "verifiedMetadataPaths": metadata, "superblockCRCVerified": true, "incorrectLongNames": []string{}, "filesystemChecked": true}, "container": container}, "handsetAcceptance": "not tested"}
-	if err = writePackJSON(filepath.Join(result, "neo-acceptance.json"), acceptance); err != nil {
-		return err
+	names := []string{container.OS}
+	if container.Radio != "" {
+		names = append(names, strings.TrimSuffix(container.OS, "_os.exe")+"_radio.exe")
 	}
-	if err = copyPackFile(filepath.Join(root, "neo.lock.json"), filepath.Join(result, "snapshot-used.json")); err != nil {
-		return err
-	}
-	fmt.Fprintln(progress, "Phase 6/6: sealing log and publishing checked firmware")
-	// Stop heartbeat before taking the final log snapshot and inventory.
-	stop()
-	if err = log.Sync(); err != nil {
-		return err
-	}
-	if err = copyPackFile(logPath, filepath.Join(result, "neo-build.log")); err != nil {
-		return err
-	}
-	inventory, err := packInventory(result)
-	if err != nil {
-		return err
-	}
-	names := make([]string, 0, len(inventory))
-	for name := range inventory {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	var sums strings.Builder
 	for _, name := range names {
-		fmt.Fprintf(&sums, "%s  %s\n", inventory[name], name)
+		source := filepath.Join(result, name)
+		digest, e := fileDigest(source, progress)
+		if e != nil {
+			return e
+		}
+		fmt.Fprintf(progress, "SHA256 %s: %s\n", name, digest)
+		if err = os.Rename(source, filepath.Join(delivery, name)); err != nil {
+			return err
+		}
 	}
-	if err = os.WriteFile(filepath.Join(result, "SHA256SUMS"), []byte(sums.String()), 0644); err != nil {
-		return err
+	if err = os.RemoveAll(result); err != nil {
+		return fmt.Errorf("remove private build intermediates: %w", err)
 	}
 	if err := interrupted(); err != nil {
 		return err
 	}
-	if err = atomicfile.PublishDirectory(result, output); err != nil {
+	if err = atomicfile.PublishDirectory(delivery, output); err != nil {
 		return err
 	}
 	fmt.Fprintf(console, "v4-neo build complete in %.1fs: %s\n", time.Since(progress.started).Seconds(), output)
