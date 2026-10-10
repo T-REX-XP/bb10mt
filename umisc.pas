@@ -647,13 +647,22 @@ function qnx6_lfile_checksum(Name: Pointer; size: word): DWord;
 var
   i: integer;
   p: pbyte;
-  r: DWord;
+  r, low: DWord;
 begin
   p := Name;
   r := 0;
+  if size = 0 then
+    Exit(0);
   for i := 0 to size - 1 do
-    r := Dword(((r shr 1) or (r shl 31)) + p^); // одразу обертання + додавання
-  Inc(p);
+  begin
+    // BB10 kernel: shift, add this byte, then conditionally XOR the high bit.
+    // Advance inside the loop; hashing the first byte repeatedly breaks lookup.
+    low := r and 1;
+    r := (r shr 1) + p^;
+    if low <> 0 then
+      r := r xor $80000000;
+    Inc(p);
+  end;
   Result := r;
 end;
 

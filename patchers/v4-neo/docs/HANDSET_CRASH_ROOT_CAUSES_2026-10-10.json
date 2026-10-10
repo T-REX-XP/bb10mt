@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-10",
+  "device": "BLACKBERRY-D55E CLASSICROW, OS 10.3.3.3216",
+  "rootCauses": {
+    "appWorld": {
+      "mechanism": "Legacy Pascal qnx6_lfile_checksum advances the filename pointer outside the loop and uses rotate/add instead of shift/add/conditional-XOR. The resulting directory checksum prevents kernel lookup despite successful enumeration.",
+      "proof": [
+        {
+          "name": "libAppWorldStoreFront.so.1.0.0",
+          "storedAndReproducedLegacyChecksum": "fffffd77",
+          "kernelChecksum": "7fffc8d0"
+        },
+        {
+          "name": "cert_E0AB059420725493056062023670F7CD2EFC6666.pem",
+          "storedAndReproducedLegacyChecksum": "ff9c00c5",
+          "kernelChecksum": "994a99a0"
+        }
+      ],
+      "faultyArtifact": "D:\\tmp\\2 (packed OS autoloader still has incorrect checksums; repaired loose UFS differs)",
+      "fix": "Go writer uses the correct recurrence and checks final embedded UFS. Legacy Pascal source corrected too; Pascal compiler unavailable, no rebuilt legacy executable claimed."
+    },
+    "bbmStartup": {
+      "mechanism": "Adapter turns a native startup timeout into Disabled, causing the UI setup error/Exit page. authman denied the background worker before registered BBM launch; native authorization subsequently succeeded.",
+      "fix": "Native and transport timeouts retain Ongoing while clearing credentials and retrying. Explicit authentication rejection still disables setup.",
+      "limit": "Exact authman internal reason for pre-launch denial is not established; no grants or authorization checks were bypassed."
+    },
+    "bbmHistory": {
+      "mechanism": "Adapter incorrectly uses the 262144-byte input parser bound to size PPS writes. A 44519-byte message-history reply is rejected with errno 22, terminating the worker.",
+      "handsetProbe": [
+        {
+          "bytes": 4096,
+          "result": "success"
+        },
+        {
+          "bytes": 8192,
+          "result": "success"
+        },
+        {
+          "bytes": 16384,
+          "result": "success"
+        },
+        {
+          "bytes": 32768,
+          "errno": 28
+        },
+        {
+          "bytes": 44519,
+          "errno": 22
+        },
+        {
+          "bytes": 65536,
+          "errno": 22
+        }
+      ],
+      "fix": "Chunk list replies below a separate 16384-byte PPS write budget, reserving 1024 bytes for envelopes. Reject oversized individual elements through the existing request error handler."
+    }
+  },
+  "handsetResults": {
+    "bbid": "Native sign-in completed 21:03:57; account retrieval succeeded. Original reported sign-in rejection was not reproduced.",
+    "appWorld": {
+      "catalogueRendered": true,
+      "uiPid": 25596023,
+      "screenshot": "C:\\Users\\nazar\\OneDrive\\Pictures\\bb10Screencast\\bb10-20261010-213335.png",
+      "storefrontSha256": "5bd0d353c27b2d2356ec53e462d7fb1f0c7990ff8124e5fdc03ac3d46ac2d552",
+      "rollbackDirectory": "/apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/.native-backup-f7be5a633f50"
+    },
+    "bbm": {
+      "chatsScreenRendered": true,
+      "uiPid": 27291783,
+      "workerPid": 27213914,
+      "supervisorPid": 27172953,
+      "setupState": "Success",
+      "bbidState": "Verified",
+      "connectionState": "Connected",
+      "profilePresent": true,
+      "selfUriPresent": true,
+      "screenshot": "C:\\Users\\nazar\\OneDrive\\Pictures\\bb10Screencast\\bb10-20261010-214232.png",
+      "adapterSha256": "4ad5613066145918f5ca822c6a92c2f15cb53ccdd2a7b6b4dd6f3a5ab33ec0e3",
+      "observedNewHistoryChunkBytes": [
+        14113,
+        14194,
+        10529
+      ],
+      "rollbackDirectories": [
+        "/var/tmp/neo-bbm-backup-4ec41a36a0",
+        "/var/tmp/neo-bbm-backup-5214421d1e"
+      ],
+      "newMessageSendTested": false,
+      "finalObservation": {
+        "allWithin16KiB": true,
+        "appWorldUIStillRunning": true,
+        "messageChunkBytesSinceLastWorkerExit": [
+          14113,
+          14194,
+          10529,
+          363
+        ],
+        "bbmUIStillRunning": true,
+        "workerStillRunning": true
+      }
+    },
+    "screen": {
+      "lock": "notLocked",
+      "width": 720,
+      "height": 720,
+      "orientation": "top_up",
+      "captureSucceeded": true,
+      "reportedBrightness": "0.000",
+      "physicalBacklightVerified": false
+    },
+    "temporaryHelpersRemoved": true,
+    "rollbackMaterialRetained": true,
+    "newFirmwareFlashed": false,
+    "cleanFirstBootVerified": false
+  },
+  "validation": {
+    "maintainedSourcePreflight": true,
+    "neoNativePreflight": true,
+    "bbmNativeTests": 103,
+    "bbmNativeTestsSkipped": 6,
+    "repairTests": 4,
+    "packTests": 15,
+    "longNameTests": 10,
+    "goChecksumAndPatcherTests": true
+  },
+  "newBuild": {
+    "directory": "D:\\Downloads\\v4-neo-output\\z30-10.3.3.3216-bbid-bbm-world-fixed",
+    "toolVersion": "v0.7.0-go.7",
+    "acceptance": {
+      "checks": {
+        "container": {
+          "osAutoloader": "Z30_10.3.03.3216_STA100-1-2-3-4-5-6_os.exe",
+          "embeddedUFSSHA256": "0fcea51524c8140ccf17afe21d013efeea029a33b0ccde46bf4881eab56aa5c4",
+          "embeddedUFSBytes": 2596012032,
+          "embeddedUFSMatchesImage": true,
+          "partitions": 5,
+          "containerTrailerCRCVerified": true,
+          "CAPStubAndOverlayPreserved": true,
+          "nonUFSPartitionsPreserved": [
+            8,
+            9,
+            137,
+            6
+          ],
+          "radioUnchangedSHA256": "9af6da88fb44d0c454d29ba871af94b9f2459c578743587e462e1eff5050f1cb",
+          "verifier": "native Go content comparison",
+          "deviceAcceptance": "not tested"
+        },
+        "image": {
+          "filesystemChecked": true,
+          "incorrectLongNames": [],
+          "superblockCRCVerified": true,
+          "verifiedFiles": 58,
+          "verifiedMetadataPaths": 47
+        }
+      },
+      "handsetAcceptance": "not tested",
+      "inputSha256": "d83b04dc9bb3e12b9b6a29b05d2aeb6350cabb6fca85866c231609ba575821e2",
+      "patcher": "v4-neo",
+      "schemaVersion": 1,
+      "snapshotSha256": "bbac45d6aca72d8b9bb789616baa57eabd2cb77616944b469b25683b7df465d4",
+      "sourceCommit": "0aa36c8cc19f329d35949353f476b341da82a891",
+      "toolVersion": "v0.7.0-go.7"
+    },
+    "handsetAcceptance": "not tested after clean flash"
+  },
+  "conclusion": "Observed App World startup and BBM history-worker failures are fixed on this handset and in both payload packs. Existing account data and a live repair are not proof of clean-flash onboarding or all messaging features."
+}

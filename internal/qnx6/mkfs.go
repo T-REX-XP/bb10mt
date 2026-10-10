@@ -116,10 +116,8 @@ func Mkfs(output string, blocks, inodes, blockSize uint32) error {
 		inodeData := make([]byte, 256)
 		for i := 0; i < 2; i++ {
 			raw := inodeData[i*128 : (i+1)*128]
-			binio.Put64(raw, 0, 64)
-			if i == 0 {
-				binio.Put64(raw, 0, 96)
-			}
+			binio.Put64(raw, 0, uint64(blockSize))
+			raw[101] = 1
 			binio.LE.PutUint16(raw[32:], 0x4000|0755)
 			binio.LE.PutUint16(raw[34:], 2)
 			if i == 0 {

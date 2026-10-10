@@ -141,6 +141,8 @@ func (e *Editor) newInode(mode uint16) (Node, error) {
 			clear(n.Raw)
 			binio.LE.PutUint16(n.Raw[32:], mode)
 			binio.LE.PutUint16(n.Raw[34:], 1)
+			// BB10's allocated inode marker, also initialized by the Pascal writer.
+			n.Raw[101] = 1
 			now := uint32(time.Now().Unix())
 			for _, p := range []int{16, 20, 24, 28} {
 				binio.Put32(n.Raw, p, now)
@@ -213,6 +215,18 @@ func (e *Editor) chain(raw []byte, ptr, level int, blocks []uint32) error {
 func (e *Editor) writeData(n Node, r io.Reader, size uint64) error {
 	if binio.U32(n.Raw, 104) != 0 {
 		return fmt.Errorf("encrypted inode mutation unsupported")
+	}
+	if n.Mode()&0xf000 == 0x4000 {
+		// BB10 directories occupy complete blocks, including their zero slots.
+		// Preserve this layout even when only a few entries are populated.
+		if size%32 != 0 {
+			return fmt.Errorf("unaligned directory entries")
+		}
+		padding := (uint64(e.BlockSize) - size%uint64(e.BlockSize)) % uint64(e.BlockSize)
+		if padding > 0 {
+			r = io.MultiReader(r, bytes.NewReader(make([]byte, padding)))
+			size += padding
+		}
 	}
 	if size > uint64(e.Blocks)*uint64(e.BlockSize) {
 		return fmt.Errorf("file too large")
@@ -351,6 +365,14 @@ func (e *Editor) addEntry(parent Node, name string, inode uint32) error {
 		binio.Put32(b, 8, uint32(idx))
 		if binio.U32(e.Super, 24)&0x100 != 0 {
 			binio.Put32(b, 12, LongNameChecksum([]byte(name)))
+		}
+	}
+	// Stock directories already contain free slots. Reuse them before growing;
+	// appending after block padding would otherwise expand every edited directory.
+	for off := 0; off < len(raw); off += 32 {
+		if number := binio.U32(raw, off); number == 0 || number == Missing {
+			copy(raw[off:off+32], b)
+			return e.writeData(parent, bytes.NewReader(raw), uint64(len(raw)))
 		}
 	}
 	return e.writeData(parent, bytes.NewReader(append(raw, b...)), uint64(len(raw)+32))

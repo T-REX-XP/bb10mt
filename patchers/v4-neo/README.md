@@ -6,6 +6,15 @@ runtime libraries are embedded in the six supplied executables; no Pascal tool,
 Go installation, Python, shell wrapper or separate DLL installation is needed.
 macOS binaries require macOS 14 or later.
 
+The Go inode-layout regression is fixed from `v0.7.0-go.8`: newly allocated
+inodes retain the original active marker, and directories use full filesystem
+blocks and reuse empty entry slots. The filesystem checker now rejects the
+previous output. Rebuild firmware created with earlier Go snapshots; updating
+this folder does not repair an existing EXE. In particular, the earlier
+`z30-10.3.3.3216-bbid-bbm-world-fixed` output contains this defect and must be
+replaced. See [the packer comparison](docs/PACKER_PARITY_AUDIT_2026-10-10.json).
+Passcode input, rooting and SSH startup still require handset verification.
+
 ## Build fresh firmware
 
 Keep the original firmware. Choose a new output directory on a drive with at

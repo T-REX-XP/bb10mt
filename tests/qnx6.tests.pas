@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  qnx6, qnx6.types;
+  qnx6, qnx6.types, uMisc;
 
 type
   { TTestQNX6Fs }
@@ -24,9 +24,23 @@ type
     procedure TestMkDir;
     procedure TestRemoveFile;
     procedure TestRename;
+    procedure TestKernelLongNameChecksums;
   end;
 
 implementation
+
+procedure TTestQNX6Fs.TestKernelLongNameChecksums;
+var
+  name: UTF8String;
+begin
+  name := 'libAppWorldStoreFront.so.1.0.0';
+  AssertEquals('App World filename lookup checksum', Int64($7fffc8d0),
+    Int64(qnx6_lfile_checksum(@name[1], Length(name))));
+  name := 'cert_E0AB059420725493056062023670F7CD2EFC6666.pem';
+  AssertEquals('Certificate filename lookup checksum', Int64($994a99a0),
+    Int64(qnx6_lfile_checksum(@name[1], Length(name))));
+  AssertEquals('Empty filename checksum', Int64(0), Int64(qnx6_lfile_checksum(nil, 0)));
+end;
 
 procedure TTestQNX6Fs.SetUp;
 begin

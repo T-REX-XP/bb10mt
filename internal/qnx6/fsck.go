@@ -145,6 +145,15 @@ func (im *Image) Check() (CheckReport, error) {
 		if n.Mode() == 0 {
 			continue
 		}
+		// BB10's stock images and the original writer mark allocated inodes
+		// active at byte 101. A mode alone must not make a zero-status inode
+		// appear valid to the offline checker.
+		if n.Raw[101] == 0 {
+			report.Errors = append(report.Errors, fmt.Sprintf("allocated inode %d has zero status", i))
+		}
+		if n.Mode()&0xf000 == 0x4000 && n.Size()%uint64(im.BlockSize) != 0 {
+			report.Errors = append(report.Errors, fmt.Sprintf("directory %d size %d is not block aligned", i, n.Size()))
+		}
 		allocated[i] = n.Links()
 		refs, e := im.references(n.Raw, 36, 100, n.Mode()&0xf000 != 0x4000)
 		if e != nil {

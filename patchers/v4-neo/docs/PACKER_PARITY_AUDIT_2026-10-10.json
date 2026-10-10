@@ -1,0 +1,149 @@
+{
+  "date": "2026-10-10",
+  "scope": "Read-only original Pascal / native Go logic and real-image comparison; then narrow metadata fixes and regression tests. No flash or lock changes.",
+  "badOutput": "D:\\Downloads\\v4-neo-output\\z30-10.3.3.3216-bbid-bbm-world-fixed",
+  "confirmedDefects": [
+    {
+      "layer": "QNX6 new inode initialization",
+      "pascal": "qnx6.inodemgr.pas CreateInode sets flags/status byte 101 to 1",
+      "goBefore": "newInode cleared the inode but did not initialize byte 101",
+      "observedBadOutput": {
+        "zeroStatusAllocatedInodes": 143,
+        "newDirectories": 62,
+        "newRegularFiles": 81
+      },
+      "fixedIn": "internal/qnx6/edit.go newInode"
+    },
+    {
+      "layer": "QNX6 directory storage",
+      "pascal": "WriteDirectory rounds inode.size to the block size; FindOrAddDirEntry reuses free slots",
+      "goBefore": "new directory stores 64 bytes; addEntry appends after padded data instead of using free slots",
+      "observedBadOutput": {
+        "unalignedDirectories": 79,
+        "varBytes": 4352,
+        "varEtcSshBytes": 4224,
+        "varRootdataBytes": 256
+      },
+      "stockAndPascal": "All allocated directories are multiples of 4096 bytes",
+      "fixedIn": "internal/qnx6/edit.go writeData and addEntry"
+    }
+  ],
+  "validationGap": "Old Go fsck verified pointers, allocation, links and names but did not validate the active inode marker or block-aligned directory size. Payload SHA256 alone cannot detect this metadata defect.",
+  "fixes": {
+    "nativeWriter": "New inode status=1; block-aligned zero-padded directories; free-slot reuse",
+    "nativeChecker": "Reject allocated inodes with zero status and directories not block aligned; Commit, script, batch and patcher publishing use this check",
+    "mkfs": "Root and lost+found also use active status and full directory blocks",
+    "maintainedPack": "scripts/qnx6_longnames.py independently rejects either defect before any checksum repair",
+    "firstFixedVersion": "v0.7.0-go.8"
+  },
+  "containerComparison": {
+    "identicalContents": [
+      "CAP PE stub and pre-tail overlay",
+      "IFS",
+      "RCFS including stock keyboard OS content",
+      "SIG2",
+      "MBR",
+      "original radio bundle"
+    ],
+    "freshRecheck": "batch.VerifyBuild passed against original input and flashed output; final embedded UFS matches loose UFS",
+    "differences": [
+      {
+        "name": "CAP tail padding",
+        "sourceBytes": 156,
+        "goBytes": 132,
+        "removedBytesAreZero": true,
+        "interpretation": "Self-described offsets updated; no demonstrated corruption"
+      },
+      {
+        "name": "QCFM header padding",
+        "sourceBytes": 392,
+        "goBytes": 360,
+        "removedBytesAreZero": true,
+        "interpretation": "No demonstrated corruption"
+      },
+      {
+        "name": "sparse trailing erased block",
+        "interpretation": "Go preserves it; Pascal drops it. Not relevant here: complete single runs."
+      },
+      {
+        "name": "V2 leading sparse hole",
+        "interpretation": "Go preserves absolute logical offset; Pascal subtracts first offset. Actual source offsets all zero."
+      },
+      {
+        "name": "auxiliary hardware fields/hybrid flags validation",
+        "interpretation": "Generic preservation/verification limitation; source V2-only and all auxiliary fields zero, so not implicated here."
+      }
+    ]
+  },
+  "filesystemContentComparison": {
+    "stockEntries": 55243,
+    "goEntries": 45659,
+    "changedExistingPaths": [
+      "/apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/AppWorldDownloader",
+      "/apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/assets/config/catalog.conf",
+      "/apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/assets/config/storeconfig.xml",
+      "/apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/assets/public.x509",
+      "/apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/libAppWorldStoreFront.so.1.0.0",
+      "/apps/sys.bbm.gYABgLOJBR2Vz7FzS.kdgJchuag/native/assets/StoreStickerPacksPage.qml",
+      "/apps/sys.bbm.gYABgLOJBR2Vz7FzS.kdgJchuag/native/libbbm.so.1.0.0",
+      "/var/android",
+      "/var/pps/system/installer/appdetails/applications",
+      "/var/pps/system/installer/appdetails/applications.001",
+      "/var/pps/system/installer/appdetails/applications.002",
+      "/var/pps/system/installer/appdetails/applications.003",
+      "/var/pps/system/installer/appdetails/applications.010",
+      "/var/pps/system/installer/appdetails/applications.014",
+      "/var/pps/system/installer/appdetails/applications.016",
+      "/var/pps/system/installer/registeredapps/applications",
+      "/var/pps/system/navigator/config"
+    ],
+    "removedApplicationRoots": [
+      "com.evernote.gYABgI0JwqeZrkDqNAqXPZrYxT8",
+      "com.linkedin.gYABgPilB6lwL6lsxmVwDOfmbO8",
+      "com.rim.bb.app.facebook.gYABgDLo0nc9AhDgv2JAPixdyvQ",
+      "com.rim.bb.app.retaildemoshim.gYABgDVujMLj4_Ske3wIsEI_1Sc",
+      "com.tcs.maps.gYABgCxm2rf5o5xfFP8dPCQnlJY",
+      "com.twitter.gYABgMxtkHoH6S4G1_Ff5yu0E.I",
+      "sys.cfs.box.gYABgJKe3gZus2hhkRPM4zcarBU",
+      "sys.cfs.dropbox.gYABgKi0Cs_hMocaoCB7UgqkaIU",
+      "sys.retaildemo.gYABgBxWmx.86UeVA7bIl_mWB_s",
+      "sys.socialconnect.facebook.gYABgPNVFtmlTnTGF_U0dFfTvgQ",
+      "sys.socialconnect.linkedin.gYABgCUcHQzQnN9ZnpyVppfXHEQ",
+      "sys.socialconnect.twitter.gYABgB2cPvkIcyPxzQPSK9Jx89U",
+      "sys.socialconnect.youtube.gYABgGKpx0c4el2ZvSpFKF2J6bI",
+      "sys.uri.youtube.gYABgPb.Z9vEwRNMeB_hwLSqC6o"
+    ],
+    "inputPackages": "All stock IMF package files, modes and ownership match the Go output. Ukrainian prototype resources remain staged and inactive.",
+    "opaqueInodes": "Existing opaque extended inode metadata preserved; no populated ACL/crypt/checksum fields were found in either compared output."
+  },
+  "validation": {
+    "goPackagesPassed": [
+      "internal/qnx6",
+      "internal/qcfm",
+      "internal/autoloader",
+      "internal/batch",
+      "internal/cli",
+      "internal/bar"
+    ],
+    "newRegressions": "New inode status, full directory blocks, reuse after deletion, boundary growth, checker/commit rejecting both defects; writer regressions failed before fix",
+    "pythonInodeAndLongNameTestsPassed": 13,
+    "maintainedSourcePreflight": true,
+    "independentOldImageRejection": "143 zero-status allocated inodes, 79 directories not block aligned",
+    "review": "Independent read-only diff review found no actionable regressions"
+  },
+  "handset": {
+    "reported": "Keyboard fails on passcode screen after flashing; root/SSH not installed",
+    "ssh": "Previous IP 192.168.1.154 times out",
+    "usb": "No supported USB device enumerated during this investigation",
+    "rootCauseOfKeyboardEstablished": false,
+    "metadataDefectsAreProven": true,
+    "causalLinkToKeyboardOrRooting": "Plausible but not proven without handset diagnostics/acceptance",
+    "newFirmwareFlashed": false,
+    "passcodeAttempts": 0
+  },
+  "preservation": {
+    "vanillaBootHookSha256": "d144b89b810edb38b8bbb590704e94fe835c82e9eb64916db44de6e88975dc03",
+    "canonicalPublicCertificateSha256": "22b557a27055b33606b6559f37703928d3e4ad79f110b407d04986e1843543d1",
+    "oldOutputsPreserved": true
+  }
+}
