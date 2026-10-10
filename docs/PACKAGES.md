@@ -62,9 +62,10 @@ another input temporary volume. Failed transactions remove their working files.
 
 ## Migration and rollback
 
-1. Export a self-contained local catalog from the maintained firmware pack.
-   The exporter runs its existing Weather preflight and places the public PEM
-   once in the shared package. Login keys are never exported.
+1. Assemble a self-contained pack with native `bb10mt patcher assemble`.
+   Its `packages/` catalog places the public PEM once in the shared package.
+   Login keys are never exported. Run source-authoring tests before assembling
+   a changed foundation; delivered firmware builds require only the executable.
 2. Validate, plan against an already provisioned compatible image, and build.
 3. Compare all eight Weather/trust destinations and the unchanged boot hook to
    the legacy build, including SHA256, mode, uid and gid; check QNX6 and CAP CRCs.
@@ -73,7 +74,8 @@ another input temporary volume. Failed transactions remove their working files.
 5. Move other apps only after their prerequisites and ownership are explicit.
 
 ```text
-python scripts/export_weather_packages.py --pack PATH_TO_V4_NEW -o CATALOG
+bb10mt patcher assemble --pack PATH_TO_V4_NEW --release RELEASE --source GO_REPOSITORY --source-commit REVISION -o NEW_PACK
+# CATALOG is NEW_PACK/packages
 bb10mt packages validate --catalog CATALOG
 bb10mt plan -i provisioned.ufs --catalog CATALOG --profile PROFILE -o plan.json
 bb10mt build --plan plan.json -o NEW_DIRECTORY

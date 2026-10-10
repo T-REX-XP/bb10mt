@@ -258,7 +258,12 @@ func assemblePatcher(pack, release, source, commit, output string, log io.Writer
 			return err
 		}
 	}
-	if err := os.Mkdir(filepath.Join(stage, "docs"), 0755); err != nil {
+	if st, e := os.Stat(filepath.Join(source, "patchers/v4-neo/docs")); e == nil && st.IsDir() {
+		if err := copyPackTree(filepath.Join(source, "patchers/v4-neo/docs"), filepath.Join(stage, "docs")); err != nil {
+			return err
+		}
+	}
+	if err := os.MkdirAll(filepath.Join(stage, "docs"), 0755); err != nil {
 		return err
 	}
 	for _, name := range []string{"PACKAGES.md", "ERROR_CODES.md", "PERFORMANCE.md", "PERFORMANCE_VALIDATION.json"} {
@@ -357,6 +362,7 @@ func assemblePatcher(pack, release, source, commit, output string, log io.Writer
 	if err != nil {
 		return err
 	}
+	sourceFiles := 1 // patch.txt plus the four selected source trees
 	for _, name := range []string{"patch.txt", "patchdata", "certs", "patched_apps", "patched_services"} {
 		original := filepath.Join(pack, name)
 		if name == "patch.txt" {
@@ -373,11 +379,15 @@ func assemblePatcher(pack, release, source, commit, output string, log io.Writer
 		if e != nil {
 			return e
 		}
+		sourceFiles += len(files)
 		for p, digest := range files {
 			if before[name+"/"+p] != digest {
 				return fmt.Errorf("source changed during assembly: %s", p)
 			}
 		}
+	}
+	if sourceFiles != len(before) {
+		return fmt.Errorf("source inventory changed during assembly")
 	}
 	if err := exportWeather(filepath.Join(stage, "foundation"), filepath.Join(stage, "packages")); err != nil {
 		return err

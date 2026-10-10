@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
@@ -10,6 +11,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -17,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/bb10root/bb10mt/internal/apperror"
@@ -446,6 +449,7 @@ func validatePatcher(root string, log io.Writer) (patcherLock, []qnx6.Expected, 
 // The same writer serializes stage output and heartbeat output into console and
 // log. There is no subprocess pipe or shell invocation in the build path.
 type patcherProgress struct {
+	context       context.Context
 	mu            sync.Mutex
 	writer        io.Writer
 	started, last time.Time
@@ -472,7 +476,11 @@ func (p *patcherProgress) heartbeat(done <-chan struct{}, stopped chan<- struct{
 		case <-ticker.C:
 			p.mu.Lock()
 			if time.Since(p.last) >= 5*time.Second {
-				fmt.Fprintf(p.writer, "[v4-neo +%.1fs] Working; verification or I/O still in progress\n", time.Since(p.started).Seconds())
+				message := "Working; verification or I/O still in progress"
+				if p.context.Err() != nil {
+					message = "Interrupt requested; finishing the current operation before cleanup"
+				}
+				fmt.Fprintf(p.writer, "[v4-neo +%.1fs] %s\n", time.Since(p.started).Seconds(), message)
 				p.last = time.Now()
 			}
 			p.mu.Unlock()
@@ -481,6 +489,14 @@ func (p *patcherProgress) heartbeat(done <-chan struct{}, stopped chan<- struct{
 }
 
 func buildPatcher(root, input, output, version string, console io.Writer) (err error) {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	interrupted := func() error {
+		if ctx.Err() != nil {
+			return apperror.New(130, "Build interrupted", "Private staging is removed; choose a new output and retry.")
+		}
+		return nil
+	}
 	root, err = filepath.Abs(root)
 	if err != nil {
 		return err
@@ -527,7 +543,7 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 	if err != nil {
 		return err
 	}
-	progress := &patcherProgress{writer: io.MultiWriter(console, log), started: time.Now(), last: time.Now()}
+	progress := &patcherProgress{context: ctx, writer: io.MultiWriter(console, log), started: time.Now(), last: time.Now()}
 	done, stopped := make(chan struct{}), make(chan struct{})
 	go progress.heartbeat(done, stopped)
 	stop := func() {
@@ -563,9 +579,15 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 	if err != nil {
 		return err
 	}
+	if err := interrupted(); err != nil {
+		return err
+	}
 	result := filepath.Join(stage, "result")
 	fmt.Fprintln(progress, "Phase 3/6: native patching and packing")
 	if err = batch.Build(input, filepath.Join(root, "foundation", "patch.txt"), result, progress); err != nil {
+		return err
+	}
+	if err := interrupted(); err != nil {
 		return err
 	}
 	fmt.Fprintln(progress, "Phase 4/6: verifying final payloads, metadata, filesystem and container contents")
@@ -661,6 +683,9 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 		fmt.Fprintf(&sums, "%s  %s\n", inventory[name], name)
 	}
 	if err = os.WriteFile(filepath.Join(result, "SHA256SUMS"), []byte(sums.String()), 0644); err != nil {
+		return err
+	}
+	if err := interrupted(); err != nil {
 		return err
 	}
 	if err = atomicfile.PublishDirectory(result, output); err != nil {

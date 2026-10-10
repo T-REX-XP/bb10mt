@@ -95,8 +95,9 @@ development executable; use `cmd/build` or `cmd/release` for delivered tools.
 
 Errors include a symbolic name, stable numeric exit code and recovery hint.
 See [error codes](docs/ERROR_CODES.md). Batch builds report named stages and
-elapsed time; the v4-neo wrapper streams them and adds byte-based SHA256 progress
-and heartbeats while a child is busy. It never invents an overall percentage.
+elapsed time; native `patcher build` adds byte-based SHA256 progress, final
+content verification and heartbeats. `patcher validate` checks the pack, and
+`patcher assemble` creates it. These commands need no host shell/Python wrappers.
 
 Choose the executable for your OS and CPU: `bb10mt-VERSION-windows-amd64.exe`
 or `windows-arm64.exe`, `bb10mt-VERSION-linux-amd64` or `linux-arm64`, and

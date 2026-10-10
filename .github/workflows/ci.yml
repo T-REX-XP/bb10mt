@@ -30,10 +30,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'go vet failed' }
           go test -race -coverprofile=coverage.out ./...
           if ($LASTEXITCODE -ne 0) { throw 'go test failed' }
-      - name: Catalog exporter path and publication tests
-        run: python -B scripts/test_export_weather_packages.py
-      - name: v4-neo wrapper failure and publication tests
-        run: python -B -m unittest discover -s patchers/v4-neo/tests
       - name: Independent CAP verifier corruption tests
         run: python -B scripts/test_verify_real_build.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

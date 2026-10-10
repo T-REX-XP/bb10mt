@@ -195,6 +195,30 @@ func TestPatcherNativeBuild(t *testing.T) {
 	}
 }
 
+func TestMaintainedFoundation(t *testing.T) {
+	root := os.Getenv("BB10MT_SOURCE_PACK")
+	if root == "" {
+		t.Skip("optional maintained source pack verification")
+	}
+	rows, err := foundationExpected(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, metadata := 0, 0
+	for _, row := range rows {
+		if row.SHA256 != "" {
+			files++
+		}
+		if row.Mode != nil || row.UID != nil || row.GID != nil {
+			metadata++
+		}
+	}
+	t.Logf("Verified %d public payloads and %d final metadata paths", files, metadata)
+	if files < 58 || metadata < 47 {
+		t.Fatal("maintained acceptance coverage reduced", files, metadata)
+	}
+}
+
 func TestPatcherRejectsMutationAndInvalidInputs(t *testing.T) {
 	for _, kind := range []string{"payload", "extra foundation", "boot pin", "certificate pin", "version", "invalid CAP", "failure log"} {
 		t.Run(kind, func(t *testing.T) {
