@@ -120,3 +120,6 @@ writable mounts and BAR installation publish a checked new image. Loader probing
 is explicit with `loader --probe-all` and emits JSON lines. Read the compatibility
 matrix before replacing the legacy executable; [validation records](docs/VALIDATION.md)
 distinguish local results from hardware and hosted-CI gates.
+
+Measured Windows Z30 performance and the I/O/cache fixes are documented in
+[PERFORMANCE.md](docs/PERFORMANCE.md), with raw timing records and limitations.

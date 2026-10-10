@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-10",
+  "sourceCommit": "af608152050e412a7aaa708d286c2d624c873de6",
+  "toolVersion": "v0.7.0-go.5",
+  "inputSHA256": "d83b04dc9bb3e12b9b6a29b05d2aeb6350cabb6fca85866c231609ba575821e2",
+  "scriptSHA256": "37cca920cd47f489f7abed3579d6685d1143d9a2ac37c7fbe8ca6a9c14e0da66",
+  "before": {
+    "schemaVersion": 1,
+    "platform": "Windows-11-10.0.26200-SP0",
+    "input": "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+    "inputSHA256": "d83b04dc9bb3e12b9b6a29b05d2aeb6350cabb6fca85866c231609ba575821e2",
+    "script": "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+    "scriptSHA256": "37cca920cd47f489f7abed3579d6685d1143d9a2ac37c7fbe8ca6a9c14e0da66",
+    "method": "sequential alternating order; direct stdout/stderr to files; natural OS cache; native batch only",
+    "tools": {
+      "original": {
+        "executable": "D:\\Downloads\\v4_new\\bb10mt.exe",
+        "sha256": "71eb0ff900040b6c82762926e1c52e158163e87373b2f1925a393991a0cdcba9"
+      },
+      "go-old": {
+        "executable": "D:\\Downloads\\v4-neo\\bin\\windows-amd64\\bb10mt.exe",
+        "sha256": "ca4ef70e06b419c0183760a63d21bfc6c837c728da2cac872bc9e105ddfe80fa"
+      },
+      "go-fixed": {
+        "executable": "D:\\Downloads\\v4-neo-benchmark\\bb10mt-optimized.exe",
+        "sha256": "f9d8c9dc852fa810a697fa4e52e91258e8ce9ddfd82dc8f8cd8ebc589b1ed896"
+      }
+    },
+    "runs": [
+      {
+        "tool": "original",
+        "round": 1,
+        "wallSeconds": 35.694070500001544,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\comparison\\original-1",
+        "command": [
+          "D:\\Downloads\\v4_new\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\comparison\\original-1"
+        ]
+      },
+      {
+        "tool": "go-old",
+        "round": 1,
+        "wallSeconds": 103.34448719999637,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-old-1",
+        "command": [
+          "D:\\Downloads\\v4-neo\\bin\\windows-amd64\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-old-1"
+        ]
+      },
+      {
+        "tool": "go-fixed",
+        "round": 1,
+        "wallSeconds": 58.62819550000131,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-fixed-1",
+        "command": [
+          "D:\\Downloads\\v4-neo-benchmark\\bb10mt-optimized.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-fixed-1"
+        ]
+      },
+      {
+        "tool": "go-fixed",
+        "round": 2,
+        "wallSeconds": 91.34291939999093,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-fixed-2",
+        "command": [
+          "D:\\Downloads\\v4-neo-benchmark\\bb10mt-optimized.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-fixed-2"
+        ]
+      },
+      {
+        "tool": "go-old",
+        "round": 2,
+        "wallSeconds": 205.1666441999987,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-old-2",
+        "command": [
+          "D:\\Downloads\\v4-neo\\bin\\windows-amd64\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\comparison\\go-old-2"
+        ]
+      },
+      {
+        "tool": "original",
+        "round": 2,
+        "wallSeconds": 57.839062099999865,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\comparison\\original-2",
+        "command": [
+          "D:\\Downloads\\v4_new\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\comparison\\original-2"
+        ]
+      }
+    ],
+    "inputsUnchanged": true
+  },
+  "after": {
+    "schemaVersion": 1,
+    "platform": "Windows-11-10.0.26200-SP0",
+    "input": "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+    "inputSHA256": "d83b04dc9bb3e12b9b6a29b05d2aeb6350cabb6fca85866c231609ba575821e2",
+    "script": "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+    "scriptSHA256": "37cca920cd47f489f7abed3579d6685d1143d9a2ac37c7fbe8ca6a9c14e0da66",
+    "method": "sequential alternating order; direct stdout/stderr to files; natural OS cache; native batch only",
+    "tools": {
+      "original": {
+        "executable": "D:\\Downloads\\v4_new\\bb10mt.exe",
+        "sha256": "71eb0ff900040b6c82762926e1c52e158163e87373b2f1925a393991a0cdcba9"
+      },
+      "go-final": {
+        "executable": "D:\\Downloads\\v4-neo\\bin\\windows-amd64\\bb10mt.exe",
+        "sha256": "b4960a98320068f6f3f84c5dd6101471ccc8ee9c2b1417d1f6328dc99571f999"
+      }
+    },
+    "runs": [
+      {
+        "tool": "original",
+        "round": 1,
+        "wallSeconds": 87.50436969999282,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\original-1",
+        "command": [
+          "D:\\Downloads\\v4_new\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\original-1"
+        ]
+      },
+      {
+        "tool": "go-final",
+        "round": 1,
+        "wallSeconds": 69.94554840000637,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\go-final-1",
+        "command": [
+          "D:\\Downloads\\v4-neo\\bin\\windows-amd64\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\go-final-1"
+        ]
+      },
+      {
+        "tool": "go-final",
+        "round": 2,
+        "wallSeconds": 60.30620639999688,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\go-final-2",
+        "command": [
+          "D:\\Downloads\\v4-neo\\bin\\windows-amd64\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\go-final-2"
+        ]
+      },
+      {
+        "tool": "original",
+        "round": 2,
+        "wallSeconds": 49.661396899988176,
+        "exitCode": 0,
+        "output": "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\original-2",
+        "command": [
+          "D:\\Downloads\\v4_new\\bb10mt.exe",
+          "batch",
+          "-i",
+          "D:\\Downloads\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6.exe",
+          "-s",
+          "D:\\Downloads\\v4-neo\\foundation\\patch.txt",
+          "-o",
+          "D:\\Downloads\\v4-neo-benchmark\\final-comparison\\original-2"
+        ]
+      }
+    ],
+    "inputsUnchanged": true
+  },
+  "oldGoMeanSeconds": 154.25556569999753,
+  "finalGoMeanSeconds": 65.12587740000163,
+  "elapsedReductionPercent": 57.78053316619961,
+  "cleanOriginalRunsSeconds": [
+    35.694070500001544,
+    57.839062099999865,
+    49.661396899988176
+  ],
+  "cleanOriginalMeanSeconds": 47.73150983332986,
+  "excludedFinalOriginalRound": 1,
+  "exclusionReason": "Overlapped the end of Linux snapshot validation; retained in raw records, excluded from clean original summary.",
+  "limitations": [
+    "Windows x64 Z30 only; two runs per Go version; natural caches, no controlled cold-cache reset.",
+    "Large variance from storage/cache conditions; absolute ratios are host-specific.",
+    "Native batch timings exclude wrapper preflight, independent verification and output hashing.",
+    "Legacy native batch performs fewer integrity checks; its maintained wrapper also repairs names and repacks the OS.",
+    "Initial timestamp-per-line diagnostic runs are excluded from comparison.",
+    "v0.7.0-go.4 was an intermediate development binary; final timings use the delivered bundled v0.7.0-go.5 executable."
+  ],
+  "profiler": {
+    "baselineSeconds": 159.363,
+    "intermediateSeconds": 29.778,
+    "baselineWindowsBridgeSamplePercent": 85.51,
+    "baselineExtractUFSSec": 62.346,
+    "intermediateExtractUFSSec": 2.203,
+    "baselineRepairSec": 33.657,
+    "intermediateRepairSec": 5.284,
+    "baselinePatchSec": 32.579,
+    "intermediatePatchSec": 9.091,
+    "baselineLongNameChecksumSamplePercent": 0.12,
+    "note": "Profiles isolate unchanged algorithm before and after initial bulk-copy/cache fixes; intermediate profile precedes final QCFM batching."
+  },
+  "oldGoPreservedExecutable": "D:/Downloads/v4-neo-go3-backup/bin/windows-amd64/bb10mt.exe",
+  "evidenceRoot": "D:\\Downloads\\v4-neo-benchmark",
+  "temporaryFirmwareCopiesRetained": true,
+  "temporaryCopyCleanup": "Automatic approval review blocked recursive deletion; copies preserved."
+}

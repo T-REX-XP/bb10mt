@@ -2,31 +2,43 @@
   "schemaVersion": 1,
   "date": "2026-10-10",
   "patcher": "D:\\Downloads\\v4-neo",
-  "realBuild": "D:\\Downloads\\v4-neo-output\\z30-10.3.3.3216",
-  "toolVersion": "v0.7.0-go.3",
+  "realBuild": "D:\\tmp\\v4-neo-z30-go5",
+  "toolVersion": "v0.7.0-go.5",
+  "sourceCommit": "af608152050e412a7aaa708d286c2d624c873de6",
   "hostExecutables": 6,
   "foundationBootUnchanged": true,
   "canonicalPublicCertificateUnchanged": true,
-  "outputChecksumsVerified": 14,
+  "outputChecksumsVerified": 15,
+  "deliveredSnapshotMatchesBuiltSnapshot": true,
   "handsetLoginKeyIncluded": false,
   "firmwareSSHHostKeyIncluded": true,
   "tests": {
-    "windows": 42,
-    "linuxWSL": 42,
-    "exporterWindows": 2,
-    "actionlint": "passed"
+    "windowsPackTests": 49,
+    "linuxPackTests": 49,
+    "linuxSkipped": 1,
+    "goWindows": "all packages passed",
+    "goLinuxWSL": "all packages passed",
+    "goVet": "passed",
+    "actionlint": "passed",
+    "nativeBundleWindows": "passed",
+    "nativeBundleLinux": "passed",
+    "maintainedV4NewPreflight": "passed",
+    "maintainedV4NewTests": 25,
+    "powershellExistingOutputExit": 4
   },
   "nativeMacOSExecution": false,
   "nativeARMExecution": false,
   "hostedCIExecuted": false,
   "handsetAcceptance": "not tested",
+  "nativeBuildSeconds": 34.6,
+  "freshBuildSeconds": 69.6,
   "freshBuild": {
     "schemaVersion": 1,
     "patcher": "v4-neo",
-    "toolVersion": "v0.7.0-go.3",
-    "sourceCommit": "fc7bac1ff65ba07f7c486a44d89fe3e92fb7bfaa",
+    "toolVersion": "v0.7.0-go.5",
+    "sourceCommit": "af608152050e412a7aaa708d286c2d624c873de6",
     "inputSha256": "d83b04dc9bb3e12b9b6a29b05d2aeb6350cabb6fca85866c231609ba575821e2",
-    "snapshotSha256": "d65ec82d3f88732439a126329db6608becbc43930837df3131d79ee5baba62eb",
+    "snapshotSha256": "78a9089553b5ebd1e19786f38d91111ba768b6da5037f641ddd6731919be79fe",
     "checks": {
       "image": {
         "verifiedFiles": 58,
@@ -37,7 +49,7 @@
       },
       "container": {
         "osAutoloader": "Z30_10.3.03.3216_STA100-1-2-3-4-5-6_os.exe",
-        "embeddedUFSSHA256": "00c81683aac320b9c4387b4684e8ef2969ca8589d3fa2fdf984abb706be09a7a",
+        "embeddedUFSSHA256": "b9ec220ed3c314ff1d55ee4ef1eaf05c4368460266d33b571bf07ef655dc1f30",
         "embeddedUFSBytes": 2596012032,
         "partitions": 5,
         "containerTrailerCRCVerified": true,
@@ -54,5 +66,66 @@
       }
     },
     "handsetAcceptance": "not tested"
+  },
+  "releaseVerification": {
+    "matchingNativeSourceArchives": 22,
+    "sha256": {
+      "DEPENDENCIES.md": "3bd5cd0c840d854d1114670314c64cbb0339d913368ff0c80677d3cad1f8cee7",
+      "bb10mt-v0.7.0-go.5-darwin-amd64": "4f702b581bf6990ed447db702cadadc1c68c1f991cd8df439dba84734afb7e14",
+      "bb10mt-v0.7.0-go.5-darwin-amd64.tar.gz": "8b21656bb57d1e6d55cb1f50608e6f36a4b632cdc1b5681037fcd4da2da53edb",
+      "bb10mt-v0.7.0-go.5-darwin-arm64": "3ecc1ee30117a4c399edc20fb2367672b0100db823c29eacdb924e29936e7771",
+      "bb10mt-v0.7.0-go.5-darwin-arm64.tar.gz": "0da7f832a7f0591596d65e039a05a44fdd40eb0a6997083ed022647deb66d847",
+      "bb10mt-v0.7.0-go.5-linux-amd64": "ec259dcddb7d34367bf44a66a30b0b0dffa7139b8ec01a3b9fc7d8d183993c26",
+      "bb10mt-v0.7.0-go.5-linux-amd64.tar.gz": "85738e43e9fb05f6832e45f0704fb3067d2a55e5ade1760269eea88219ec35b0",
+      "bb10mt-v0.7.0-go.5-linux-arm64": "ae29b76ad2f73f5d4ddbda2532a6fffc53a3a4103c5ee246a3856164d09de409",
+      "bb10mt-v0.7.0-go.5-linux-arm64.tar.gz": "cb71be2a177a9f5da81c611c23011928adb3cab340d825c500c2d51d9363a7cc",
+      "bb10mt-v0.7.0-go.5-windows-amd64.exe": "b4960a98320068f6f3f84c5dd6101471ccc8ee9c2b1417d1f6328dc99571f999",
+      "bb10mt-v0.7.0-go.5-windows-amd64.zip": "961b45e8fb7c25742c8260078f148315d67343144d8b9c3d8333c3e5a62a6c85",
+      "bb10mt-v0.7.0-go.5-windows-arm64.exe": "4afe377bbd4abaaac6a4f03e052effd8d9a2b4d2daa6a63328687d5daa33b49c",
+      "bb10mt-v0.7.0-go.5-windows-arm64.zip": "6d23d1db455fd1c572b9a058194243074245c22266913760fa6940485fa08802",
+      "build-version.json": "b76d39cca2c801e49290efc14ddf16bbe5447b59a13c0dbfba976689b071ebbb",
+      "runtime-sources.zip": "8229b5e3accccbbdd995cb32c795c249203d4df055fb884e02bb11c9ee357fe5",
+      "runtime.lock.json": "87ea2a5a5267bb80fc12c11ca2eb3406fb24b13b8a855abfce83c5c6ce2c463a",
+      "sbom.cdx.json": "9cbc1b5376cf29ed9ac85c06ae48876007cc74f6f1f7143e8ebd1d428f1c809c"
+    },
+    "targets": {
+      "darwin-amd64": {
+        "archivedExecutableMatches": true,
+        "executableBytes": 5825232,
+        "payloadSHA256": "dc2da8c78d43c9a3951753544a1d0682e768ab89f32b4aebf08276bacab33216",
+        "verifiedRuntimeFiles": 26
+      },
+      "darwin-arm64": {
+        "archivedExecutableMatches": true,
+        "executableBytes": 5449730,
+        "payloadSHA256": "7214c12464b287d728dcf78cdb8046e72179e1ebbd29b042d9be107c3942022d",
+        "verifiedRuntimeFiles": 26
+      },
+      "linux-amd64": {
+        "archivedExecutableMatches": true,
+        "executableBytes": 9654396,
+        "payloadSHA256": "a803392dd8ac36c65602637aa724bb5c15e0ee8e3ec900e2eca1aa26486d799b",
+        "verifiedRuntimeFiles": 60
+      },
+      "linux-arm64": {
+        "archivedExecutableMatches": true,
+        "executableBytes": 8388732,
+        "payloadSHA256": "ce16f9583f5802da5484f185962591d494cadcf4c8feacdfe6534cabe98a229e",
+        "verifiedRuntimeFiles": 60
+      },
+      "windows-amd64": {
+        "archivedExecutableMatches": true,
+        "executableBytes": 6204416,
+        "payloadSHA256": "2749c894bd9840c22376acc8686f323f8ceb36a0ce674f7839fa190a21c9a99e",
+        "verifiedRuntimeFiles": 27
+      },
+      "windows-arm64": {
+        "archivedExecutableMatches": true,
+        "executableBytes": 5679616,
+        "payloadSHA256": "b2c89ebf2aa1f07424f559777b7b1e61f3a5e2900f55c83430205fc6fd5db548",
+        "verifiedRuntimeFiles": 27
+      }
+    },
+    "verifiedChecksumEntries": 17
   }
 }
