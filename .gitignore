@@ -23,8 +23,8 @@ lib/
 link*.res
 
 # Custom project files
-bb10mt
-bb10mt.exe
+/bb10mt
+/bb10mt.exe
 bb10mt.dbg
 bb10mt.lps
 reslist.txt
@@ -50,3 +50,10 @@ patch.txt
 patchdata.zip
 patchdata/
 tests/dummy.qnx6
+
+# Native Go build and verification artifacts
+/bin/
+/dist/
+/out/
+coverage.out
+*.test

@@ -1,5 +1,11 @@
 # BB10 MultiTool
 
+The native **Go implementation** provides single executables for Windows, Linux
+and macOS on amd64/arm64. See [build instructions and
+examples](README_GO.md), [review/design/plan](docs/MIGRATION.md), and the
+[current compatibility matrix](docs/COMPATIBILITY.md). The command reference
+below describes the Pascal baseline; the matrix identifies migrated commands.
+
 **BB10 MultiTool** (v0.6.0.0 beta 4) is a comprehensive command-line utility for working with BlackBerry 10 images, file systems (QNX6, RCFS), firmware structures (QCFM, Autoloaders), unpacked BAR packages, and connected devices (flashing, device info, connection management).
 
 ## 🚀 Installation & Shell Completion

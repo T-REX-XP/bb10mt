@@ -1,0 +1,15 @@
+# Keep native sources and packaged documentation identical across checkouts.
+*.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
+.github/** text eol=lf
+README_GO.md text eol=lf
+THIRD_PARTY_NOTICES.md text eol=lf
+docs/** text eol=lf
+scripts/** text eol=lf
+LICENSE text eol=lf
+bb10mt.ini text eol=lf
+internal/**/testdata/** text eol=lf
+internal/qcfm/signature.bin binary
+# Preserve upstream license and notice bytes, including their whitespace.
+third_party/licenses/** -text -whitespace
