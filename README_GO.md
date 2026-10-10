@@ -10,6 +10,11 @@ glibc loader and can run on musl hosts. Source-only builds use host libraries.
 See [bundled runtime details](docs/BUNDLED_RUNTIME.md). RCFS uses the pinned
 MIT-licensed pure-Go LZO codec recorded in [third-party notices](THIRD_PARTY_NOTICES.md).
 
+Declarative local app packages are available alongside the script workflow.
+See [package design and migration](docs/PACKAGES.md) for Weather, shared trust,
+explicit boot prerequisites and locked builds. Adding package data does not
+require recompiling the single binary.
+
 ```
 go test ./...
 go vet ./...
@@ -30,6 +35,9 @@ bb10mt qnx6 script -i repaired.ufs -s patch.txt -o patched.ufs
 bb10mt qnx6 fsck -i patched.ufs
 bb10mt qnx6 compact -i patched.ufs -o compact.ufs
 bb10mt batch -i original.exe -s patch.txt -o new-build
+bb10mt packages validate --catalog packages
+bb10mt plan -i provisioned.ufs --catalog packages --profile packages/weather.json -o plan.json
+bb10mt build --plan plan.json -o package-build
 bb10mt rcfs verify -i filesystem.rcfs
 bb10mt bar verify -p unpacked-bar
 bb10mt bar install -p unpacked-bar -i filesystem.ufs -o installed.ufs

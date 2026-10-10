@@ -36,17 +36,28 @@ func Build(input, script, output string, log io.Writer) error {
 type Options struct{ Compact bool }
 
 func BuildWithOptions(input, script, output string, log io.Writer, opt Options) error {
-	if _, err := os.Lstat(output); err == nil {
-		return fmt.Errorf("output already exists")
-	} else if !os.IsNotExist(err) {
-		return err
-	}
 	// Validate script syntax before spending disk space on extraction.
 	data, err := os.ReadFile(script)
 	if err != nil {
 		return err
 	}
 	if _, err = qnx6.ParseScript(data); err != nil {
+		return err
+	}
+	return BuildWithTransform(input, output, log, opt, func(source, target string) error {
+		return qnx6.Script(source, script, target, log)
+	}, []string{"script fail-fast", "post-script filesystem and pushed SHA256"})
+}
+
+// BuildWithTransform reuses the verified CAP transaction for a declarative
+// image transform. The callback must publish a new, verified target image.
+func BuildWithTransform(input, output string, log io.Writer, opt Options, transform func(string, string) error, checks []string) error {
+	if transform == nil {
+		return fmt.Errorf("image transform required")
+	}
+	if _, err := os.Lstat(output); err == nil {
+		return fmt.Errorf("output already exists")
+	} else if !os.IsNotExist(err) {
 		return err
 	}
 	f, err := os.Open(input)
@@ -149,7 +160,7 @@ func BuildWithOptions(input, script, output string, log io.Writer, opt Options) 
 		return fmt.Errorf("source image check: %w", err)
 	}
 	patched := filepath.Join(stage, ".patched.ufs")
-	if err = qnx6.Script(repaired, script, patched, log); err != nil {
+	if err = transform(repaired, patched); err != nil {
 		return err
 	}
 	if err = os.Remove(repaired); err != nil {
@@ -185,7 +196,8 @@ func BuildWithOptions(input, script, output string, log io.Writer, opt Options) 
 	if err = autoloader.Create(osPath, capPath, []string{packed}, cap.Version); err != nil {
 		return err
 	}
-	report := Report{Input: input, OS: filepath.Base(osPath), Partitions: len(partitions), Checks: []string{"source container structure/CRC", "source filesystem and name repair", "script fail-fast", "post-script filesystem and pushed SHA256", "packed container structure/CRC", "final CAP offset table"}}
+	report := Report{Input: input, OS: filepath.Base(osPath), Partitions: len(partitions), Checks: []string{"source container structure/CRC", "source filesystem and name repair", "packed container structure/CRC", "final CAP offset table"}}
+	report.Checks = append(report.Checks, checks...)
 	if opt.Compact {
 		report.Checks = append(report.Checks, "compaction filesystem and all allocated inode SHA256")
 	}

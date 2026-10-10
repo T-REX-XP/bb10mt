@@ -21,6 +21,7 @@ import (
 	"github.com/bb10root/bb10mt/internal/batch"
 	"github.com/bb10root/bb10mt/internal/binio"
 	"github.com/bb10root/bb10mt/internal/connect"
+	"github.com/bb10root/bb10mt/internal/patchpkg"
 	"github.com/bb10root/bb10mt/internal/qcfm"
 	"github.com/bb10root/bb10mt/internal/qnx6"
 	"github.com/bb10root/bb10mt/internal/raw"
@@ -39,6 +40,9 @@ Usage: bb10mt <command> [options]
   autoloader verify    Validate a CAP offset table
   autoloader loaders   Extract embedded gzip RAM loaders
   batch                Build and verify OS/radio autoloaders from a patch script
+  packages validate    Validate a local declarative package catalog
+  plan                 Resolve packages and lock a compatible image build
+  build                Build a new image/autoloader directory from a locked plan
   qnx6 mkfs/script     Create/edit a new QNX6 image
   qnx6 fsck/compact    Check or compact an image into a new copy
   qnx6 audit           Inspect all directory long-name checksums
@@ -222,16 +226,65 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 	}
 	name := args[0]
 	args = args[1:]
-	if name == "autoloader" || name == "qnx6" || name == "bar" || name == "raw" || name == "rcfs" || name == "vmdk" || name == "usb" {
+	if name == "autoloader" || name == "qnx6" || name == "bar" || name == "raw" || name == "rcfs" || name == "vmdk" || name == "usb" || name == "packages" {
 		if len(args) == 0 {
 			return fmt.Errorf("%s subcommand required", name)
 		}
 		name += " " + args[0]
 		args = args[1:]
 	}
+	if name == "packages validate" && len(args) == 1 && !strings.HasPrefix(args[0], "-") {
+		args = []string{"--catalog", args[0]}
+	}
 	f := newFlags(name, errOut)
 	var run func() error
 	switch name {
+	case "packages validate":
+		catalog := f.String("catalog", "", "Local package catalog directory")
+		run = func() error {
+			if err := require(*catalog, "catalog"); err != nil {
+				return err
+			}
+			c, err := patchpkg.Load(*catalog)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintf(out, "Validated %d local packages\n", len(c.Packages))
+			return err
+		}
+	case "plan":
+		catalog := f.String("catalog", "", "Local package catalog directory")
+		profile := f.String("profile", "", "JSON profile with exact package versions")
+		f.str(&f.input, "i", "input", "", "QNX6 image or CAP autoloader")
+		f.str(&f.output, "o", "output", "", "New plan JSON file")
+		run = func() error {
+			for name, value := range map[string]string{"input": f.input, "output": f.output, "catalog": *catalog, "profile": *profile} {
+				if err := require(value, name); err != nil {
+					return err
+				}
+			}
+			p, err := patchpkg.NewPlan(f.input, *catalog, *profile)
+			if err != nil {
+				return err
+			}
+			if err = patchpkg.WritePlan(f.output, p); err != nil {
+				return err
+			}
+			_, err = fmt.Fprintf(out, "Locked %d packages, %d actions\n", len(p.Packages), len(p.Actions))
+			return err
+		}
+	case "build":
+		plan := f.String("plan", "", "Locked package plan JSON")
+		f.str(&f.output, "o", "output", "", "New output directory")
+		run = func() error {
+			if err := require(*plan, "plan"); err != nil {
+				return err
+			}
+			if err := require(f.output, "output"); err != nil {
+				return err
+			}
+			return patchpkg.Build(*plan, f.output, out)
+		}
 	case "usb list", "flash", "info", "loader", "nuke":
 		run = usbCommand(f, name, out)
 	case "connect":

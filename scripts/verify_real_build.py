@@ -1,5 +1,6 @@
 """Independent streaming check of a native batch build; no Go code is reused."""
 import argparse
+import contextlib
 import hashlib
 import json
 import pathlib
@@ -95,20 +96,34 @@ def main():
     parser.add_argument("--report", type=pathlib.Path, required=True)
     args = parser.parse_args()
     os_path, = args.build.glob("*_os.exe")
-    radio_path, = args.build.glob("*_radio.exe")
+    radio_paths = list(args.build.glob("*_radio.exe"))
+    if len(radio_paths) > 1:
+        raise ValueError("ambiguous radio output")
+    radio_path = radio_paths[0] if radio_paths else None
     ufs, = args.build.glob("*.ufs")
-    with args.input.open("rb") as original, os_path.open("rb") as output, radio_path.open("rb") as radio:
+    with contextlib.ExitStack() as stack:
+        original = stack.enter_context(args.input.open("rb"))
+        output = stack.enter_context(os_path.open("rb"))
         stub, sources = cap(original)
         output_stub, files = cap(output)
-        radio_stub, radios = cap(radio)
-        assert stub == output_stub == radio_stub
+        assert stub == output_stub
         stub_hash = digest_range(original, 0, stub)
-        assert stub_hash == digest_range(output, 0, stub) == digest_range(radio, 0, stub)
-        assert len(files) == len(radios) == 1 and len(sources) == 2
-        a, b = sources[1]
-        c, d = radios[0]
-        radio_hash = digest_range(original, a, b - a)
-        assert b - a == d - c and radio_hash == digest_range(radio, c, d - c)
+        assert stub_hash == digest_range(output, 0, stub)
+        assert len(files) == 1 and len(sources) in (1, 2)
+        radio_hash = None
+        if len(sources) == 2:
+            if radio_path is None:
+                raise ValueError("missing radio output")
+            radio = stack.enter_context(radio_path.open("rb"))
+            radio_stub, radios = cap(radio)
+            assert radio_stub == stub and len(radios) == 1
+            assert stub_hash == digest_range(radio, 0, stub)
+            a, b = sources[1]
+            c, d = radios[0]
+            radio_hash = digest_range(original, a, b - a)
+            assert b - a == d - c and radio_hash == digest_range(radio, c, d - c)
+        elif radio_path is not None:
+            raise ValueError("unexpected radio output")
         chunks = qcfm(output, *files[0])
         _, block, pos, runs = next(c for c in chunks if c[0] == 5)
         h, logical = hashlib.sha256(), 0

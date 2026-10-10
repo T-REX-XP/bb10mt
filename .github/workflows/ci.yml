@@ -30,6 +30,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'go vet failed' }
           go test -race -coverprofile=coverage.out ./...
           if ($LASTEXITCODE -ne 0) { throw 'go test failed' }
+      - name: Catalog exporter path and publication tests
+        run: python -B scripts/test_export_weather_packages.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-${{ matrix.os }}
@@ -52,6 +54,7 @@ jobs:
       - run: go test ./internal/connect -run '^$' -fuzz FuzzFrame -fuzztime 30s
       - run: go test ./internal/usb -run '^$' -fuzz FuzzFrame -fuzztime 30s
       - run: go test ./internal/loaderarchive -run '^$' -fuzz FuzzArchive -fuzztime 30s
+      - run: go test ./internal/patchpkg -run '^$' -fuzz FuzzManifest -fuzztime 30s
   packages:
     needs: [test, fuzz, fuse, security]
     runs-on: ubuntu-24.04

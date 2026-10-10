@@ -9,6 +9,7 @@ import (
 )
 
 var commands = []string{
+	"packages validate", "plan", "build",
 	"pack", "unpack", "verify", "split", "batch", "connect", "usb list", "flash", "info", "loader", "nuke",
 	"autoloader create", "autoloader extract", "autoloader verify", "autoloader loaders",
 	"qnx6 mkfs", "qnx6 script", "qnx6 fsck", "qnx6 compact", "qnx6 audit", "qnx6 repair-names", "qnx6 read", "qnx6 verify", "qnx6 mount",

@@ -86,3 +86,37 @@ every target; macOS dylibs declare minimum macOS 14. Native arm64/macOS runs
 remain hosted CI gates. Go test/vet cover the cache/runtime seams; native C
 versions are inventoried but not scanned by govulncheck. See BUNDLED_RUNTIME.md
 and BUNDLED_RELEASE_VALIDATION.json for distribution details/evidence.
+
+## Declarative package follow-up (v0.7.0-go.3)
+
+Local packages now expose exact dependencies, capabilities, ownership,
+compatibility hashes, a locked plan and atomic new-directory builds. Weather
+uses separate trust and read-only existing-boot foundation packages. Legacy
+scripts remain supported. No executable package hooks or implicit rooting were
+introduced. The exporter emits one public PEM source and no login keys.
+
+Windows and WSL Linux tests passed, including synthetic OS/radio CAP builds,
+idempotence, conflicting/ancestor ownership, changed payloads and locks,
+unrecognized originals, ambiguous app directories, unsafe paths, allocation
+failure, relative output paths and transaction rollback. Windows manifest
+fuzzing ran 20 seconds (355,553 executions) without a failure. Go vet, workflow
+lint and Windows/Linux exporter publication/confinement tests passed. Both pack
+source preflights and ten Weather tests per pack passed after the documentation
+was synchronized.
+
+The real Z30 installation pilot restored eight removed Weather/trust files;
+independent checks matched their bytes/modes/uid/gid to the legacy output and
+verified all 58 maintained payloads. The original boot hook stayed unchanged.
+The real full-size OS CAP was also rebuilt with all packages already present:
+both OS CAP and embedded UFS remained byte-identical to their input. Independent
+CAP trailer CRC, five-partition reconstruction, superblock CRC, pathname and
+payload checks passed, as did native QNX6 fsck. Evidence is in
+PACKAGE_BUILD_VALIDATION.json, PACKAGE_CAP_VALIDATION.json and
+PACKAGE_CAP_IMAGE_VALIDATION.json.
+
+Real temporary-disk failures published no output. Pinned source copies now use
+the system temporary area, with output staging on the destination volume.
+Hosted Actions, native macOS/arm64 execution, race instrumentation and handset
+acceptance remain qualification gates; the local results do not substitute for
+them. This package slice requires a compatible provisioned image and does not
+install the root foundation on stock firmware.

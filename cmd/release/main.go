@@ -78,7 +78,7 @@ func run() error {
 			return err
 		}
 		entries := []release.Entry{{Name: binary, Source: bin, Mode: 0755}}
-		for _, name := range []string{"LICENSE", "README_GO.md", "bb10mt.ini", "docs/BUNDLED_RUNTIME.md", "docs/MIGRATION.md", "docs/COMPATIBILITY.md", "docs/VALIDATION.md", "docs/REAL_IMAGE_VALIDATION.json", "docs/REAL_BUILD_VALIDATION.json", "docs/WRAPPER_BUILD_VALIDATION.json", "THIRD_PARTY_NOTICES.md"} {
+		for _, name := range []string{"LICENSE", "README_GO.md", "bb10mt.ini", "docs/BUNDLED_RUNTIME.md", "docs/PACKAGES.md", "docs/PACKAGE_BUILD_VALIDATION.json", "docs/PACKAGE_CAP_VALIDATION.json", "docs/PACKAGE_CAP_IMAGE_VALIDATION.json", "scripts/export_weather_packages.py", "docs/MIGRATION.md", "docs/COMPATIBILITY.md", "docs/VALIDATION.md", "docs/REAL_IMAGE_VALIDATION.json", "docs/REAL_BUILD_VALIDATION.json", "docs/WRAPPER_BUILD_VALIDATION.json", "THIRD_PARTY_NOTICES.md"} {
 			source, err := stageText(name, path)
 			if err != nil {
 				return err
