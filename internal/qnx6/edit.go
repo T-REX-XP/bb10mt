@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bb10root/bb10mt/internal/atomicfile"
 	"github.com/bb10root/bb10mt/internal/binio"
 )
 
@@ -594,4 +595,54 @@ func (e *Editor) Commit() error {
 		return fmt.Errorf("edited filesystem has %d errors: %s", len(report.Errors), report.Errors[0])
 	}
 	return nil
+}
+
+// Transaction edits a private image copy, checks the complete source and result,
+// and publishes only after the supplied service succeeds.
+func Transaction(input, output string, edit func(*Editor) error) error {
+	source, e := os.Open(input)
+	if e != nil {
+		return e
+	}
+	defer source.Close()
+	st, e := source.Stat()
+	if e != nil {
+		return e
+	}
+	if !st.Mode().IsRegular() {
+		return fmt.Errorf("source must be a regular image")
+	}
+	return atomicfile.Write(output, func(f *os.File) error {
+		if _, e := binio.BulkCopyN(f, source, st.Size()); e != nil {
+			return e
+		}
+		editor, e := NewEditor(f)
+		if e != nil {
+			return e
+		}
+		check, e := editor.Check()
+		if e != nil {
+			return e
+		}
+		if len(check.Errors) > 0 {
+			return fmt.Errorf("source filesystem invalid: %s", check.Errors[0])
+		}
+		if e = edit(editor); e != nil {
+			return e
+		}
+		return editor.Commit()
+	})
+}
+func (e *Editor) SetAttributes(p string, mode uint16, uid, gid uint32) error {
+	if mode & ^uint16(07777) != 0 {
+		return fmt.Errorf("invalid permission bits")
+	}
+	n, _, err := e.Resolve(p)
+	if err != nil {
+		return err
+	}
+	binio.LE.PutUint16(n.Raw[32:], n.Mode()&0xf000|mode)
+	binio.Put32(n.Raw, 8, uid)
+	binio.Put32(n.Raw, 12, gid)
+	return e.setNode(n)
 }

@@ -272,6 +272,8 @@ def verify_build(root, tool, input_path, result, log):
     container_report = json.loads(report_path.read_text(encoding='utf-8'))
     if not container_report['containerTrailerCRCVerified'] or not container_report['CAPStubAndOverlayPreserved']:
         raise ValueError('independent container checks failed')
+    if container_report.get('embeddedUFSMatchesImage') is not True:
+        raise ValueError('packed OS filesystem equality was not verified')
     return dict(image=image_report, container=container_report)
 
 

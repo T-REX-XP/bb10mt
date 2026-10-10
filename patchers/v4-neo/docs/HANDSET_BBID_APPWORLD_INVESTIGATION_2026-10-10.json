@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-10",
+  "scope": "SSH investigation and one user-authorized BBID sign-in; no firmware payload repair, daemon restart, reflash or account reset.",
+  "bbid": {
+    "result": "login succeeded",
+    "handsetTimes": {
+      "initialMissingCertificate": "20:41:25",
+      "enrollmentChallengeSigning": "20:41:35",
+      "authenticateUserRequest": "21:03:51.764",
+      "certificateValidationWarnings0": "21:03:53.678",
+      "trustRegistrationClockUpdate": "21:03:55.066",
+      "authenticateUserOK": "21:03:57.036",
+      "settingsLoginSuccess": "21:03:57.051",
+      "settingsAccountRetrievalSuccess": "21:03:58.915"
+    },
+    "diagnosis": "Initial boot trust acquisition ran before enrollment completed. Interactive sign-in registered trust and authenticated successfully without a service restart. The original user-visible failure was not reproduced; its exact rejection cannot be retrospectively proven.",
+    "accountScreen": "C:\\Users\\nazar\\OneDrive\\Pictures\\bb10Screencast\\bb10-20261010-210406.png",
+    "credentialsRecorded": false
+  },
+  "appworld": {
+    "result": "startup loader failure confirmed",
+    "nativeError": "dlopen of app/native/libAppWorldStoreFront.so.1.0.0 failed: Library cannot be found",
+    "listedButLstatAndOpenENOENT": [
+      "apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/libAppWorldStoreFront.so.1.0.0",
+      "var/newcert/cert_E0AB059420725493056062023670F7CD2EFC6666.pem"
+    ],
+    "storefrontHandsetInode": 55004,
+    "diagnosis": "Malformed QNX6 long-name checksum causes pathname lookup failure although directory enumeration and payload contents exist. A successful container CRC or fsck does not validate this lookup checksum.",
+    "artifactAttribution": "Handset inode and payload timestamp match D:\\tmp\\2; inspected v4-neo-output has correct lookup checksums and a different inode. This is strong image attribution, not a complete partition hash comparison."
+  },
+  "artifacts": [
+    {
+      "autoloader": "D:\\tmp\\2\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6_os.exe",
+      "containerCRC": "valid",
+      "paths": [
+        {
+          "path": "apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/libAppWorldStoreFront.so.1.0.0",
+          "inode": 55004,
+          "storedChecksum": "0xfffffd77",
+          "expectedChecksum": "0x7fffc8d0",
+          "valid": false
+        },
+        {
+          "path": "var/newcert/cert_E0AB059420725493056062023670F7CD2EFC6666.pem",
+          "inode": 55134,
+          "storedChecksum": "0xff9c00c5",
+          "expectedChecksum": "0x994a99a0",
+          "valid": false
+        }
+      ],
+      "looseUfsChecksumsValid": true
+    },
+    {
+      "autoloader": "D:\\Downloads\\v4-neo-output\\z30-10.3.3.3216\\Z30_10.3.03.3216_STA100-1-2-3-4-5-6_os.exe",
+      "containerCRC": "valid",
+      "paths": [
+        {
+          "path": "apps/sys.appworld.gYABgNSvaLtte_snIx7wjRsOcyM/native/libAppWorldStoreFront.so.1.0.0",
+          "inode": 1437,
+          "storedChecksum": "0x7fffc8d0",
+          "expectedChecksum": "0x7fffc8d0",
+          "valid": true
+        },
+        {
+          "path": "var/newcert/cert_E0AB059420725493056062023670F7CD2EFC6666.pem",
+          "inode": 1565,
+          "storedChecksum": "0x994a99a0",
+          "expectedChecksum": "0x994a99a0",
+          "valid": true
+        }
+      ],
+      "looseUfsChecksumsValid": true
+    }
+  ],
+  "additionalFindings": [
+    "BBM Python PPS adapter is repeatedly denied package authorization, error 22; distinct from successful native Settings login.",
+    "BlackBerry Protect kronos hostname cannot resolve after successful login; does not invalidate BBID success."
+  ],
+  "screen": {
+    "lock": "notLocked",
+    "width": 720,
+    "height": 720,
+    "orientation": "top_up",
+    "capture": "success",
+    "lastBrightnessPPS": "0.000",
+    "physicalBacklightProven": false
+  },
+  "cleanup": "All uploaded read-only diagnostic, credential-input and native capture helpers removed; no cleanup failures.",
+  "nextRepair": "Use an OS autoloader whose embedded UFS long-name checksums are independently verified, or perform a separately scoped guarded live restoration. Correcting only a loose UFS does not repair an already-packed executable.",
+  "validation": {
+    "sourcePreflightBothPacks": "passed",
+    "firmwarePayloadsModified": false,
+    "bootHookModified": false,
+    "certificateLayoutModified": false,
+    "longNameRegressionTestsBothPacks": {
+      "runPerPack": 10,
+      "failed": 0
+    }
+  }
+}

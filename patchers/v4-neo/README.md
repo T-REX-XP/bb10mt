@@ -32,6 +32,19 @@ Radio output is produced only when the source includes a radio bundle.
 `SHA256SUMS` accompany the Go report and firmware files. Existing outputs are
 never replaced. On failure, look for `<output>.failed.log`.
 
+App World requires the QNX6 filename checksum for
+`libAppWorldStoreFront.so.1.0.0` to be valid. A checksum repair to a loose `.ufs`
+does not update an already packed `_os.exe`. The final gate rejects that stale
+autoloader even when its container CRC passes; acceptance records
+`embeddedUFSMatchesImage: true`. Build from the original firmware into a new
+directory with the command above. Existing firmware outputs are not repaired
+by updating this patcher folder.
+
+On the investigated handset, native BBID sign-in completed successfully after
+certificate enrollment and trust registration. The earlier boot certificate
+warning did not require an account reset or a BBID binary change. See
+[the investigation evidence](docs/HANDSET_BBID_APPWORLD_INVESTIGATION_2026-10-10.json).
+
 Progress streams live with phase names, elapsed time, real hashing percentages
 and five-second heartbeats during quiet work. Errors include a stable code and
 a recovery hint; PowerShell preserves that code without an exception stack.

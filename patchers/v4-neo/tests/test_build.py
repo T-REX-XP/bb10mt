@@ -97,6 +97,19 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(failure.exception.code, 8)
         self.assert_clean_failure()
 
+    def test_container_crc_alone_cannot_accept_a_repaired_loose_image(self):
+        result = self.root / 'result'
+        result.mkdir()
+        (result / 'firmware.ufs').write_bytes(b'repaired loose image')
+        def runner(command, cwd, log):
+            if '--report' in command:
+                neo.write_json(result / 'container-verification.json', dict(
+                    containerTrailerCRCVerified=True, CAPStubAndOverlayPreserved=True))
+        with patch.object(neo, 'verify_image', return_value={'incorrectLongNames': []}), \
+                patch.object(neo, 'run', side_effect=runner), io.StringIO() as log:
+            with self.assertRaisesRegex(ValueError, 'filesystem equality was not verified'):
+                neo.verify_build(self.root, Path('bb10mt'), self.input, result, log)
+
     def test_input_change_during_build_blocks_publication(self):
         def runner(command, cwd, log):
             self.runner(command, cwd, log)

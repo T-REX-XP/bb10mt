@@ -2,6 +2,7 @@
 package batch
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -193,6 +194,17 @@ func BuildWithTransform(input, output string, log io.Writer, opt Options, transf
 		if err = os.Rename(compacted, imagePath); err != nil {
 			return err
 		}
+		// QCFM stores full blocks. Keep the delivered loose image identical to
+		// its embedded representation, including the erased final block tail.
+		image, e := os.OpenFile(imagePath, os.O_WRONLY|os.O_APPEND, 0)
+		if e != nil { return e }
+		st,e := image.Stat()
+		if e == nil {
+			padding := (qcfm.BlockSize-st.Size()%qcfm.BlockSize)%qcfm.BlockSize
+			_,e = image.Write(bytes.Repeat([]byte{0xff},int(padding)))
+		}
+		closeErr := image.Close()
+		if e != nil { return e }; if closeErr != nil { return closeErr }
 	}
 	if err = os.WriteFile(filepath.Join(stage, stem+".lst"), []byte(strings.Join(list, "\n")+"\n"), 0644); err != nil {
 		return err

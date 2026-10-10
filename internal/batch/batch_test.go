@@ -39,7 +39,9 @@ func source(t *testing.T) (string, string, string) {
 		t.Fatal(err)
 	}
 	osBundle := filepath.Join(dir, "os.signed")
-	if err := qcfm.Pack(osBundle, []qcfm.Input{{Path: im}}, qcfm.Options{Version: 2, Sign: true}); err != nil {
+	nonUFS := filepath.Join(dir, "p.ifs")
+	os.WriteFile(nonUFS, []byte("preserve this OS partition"), 0600)
+	if err := qcfm.Pack(osBundle, []qcfm.Input{{Path: im}, {Path: nonUFS}}, qcfm.Options{Version: 2, Sign: true}); err != nil {
 		t.Fatal(err)
 	}
 	radio := filepath.Join(dir, "p.radio.rcfs")
@@ -108,6 +110,63 @@ func nativeBatchFinalImage(t *testing.T, opt Options) {
 	}
 	if _, err = os.Stat(filepath.Join(output, "firmware_radio.exe")); err != nil {
 		t.Fatal(err)
+	}
+	verification, err := VerifyBuild(input, output, io.Discard)
+	if err != nil || !verification.UFSMatches || len(verification.Preserved) != 1 || verification.Preserved[0] != 8 || verification.Radio == "" {
+		t.Fatal(verification, err)
+	}
+}
+
+func TestVerifyBuildRejectsStaleImageAndChangedRadio(t *testing.T) {
+	for _, kind := range []string{"loose image", "radio", "non-UFS"} {
+		t.Run(kind, func(t *testing.T) {
+			input, script, dir := source(t)
+			output := filepath.Join(dir, "out")
+			if err := Build(input, script, output, io.Discard); err != nil {
+				t.Fatal(err)
+			}
+			switch kind {
+			case "loose image":
+				image := filepath.Join(output, "firmware.0.0.ufs")
+				data, err := os.ReadFile(image)
+				if err != nil {
+					t.Fatal(err)
+				}
+				data[len(data)-1] ^= 1
+				if err := os.WriteFile(image, data, 0600); err != nil {
+					t.Fatal(err)
+				}
+			case "radio":
+				p := filepath.Join(output, "firmware_radio.exe")
+				data, err := os.ReadFile(p)
+				if err != nil {
+					t.Fatal(err)
+				}
+				data[len(data)-1] ^= 1
+				if err := os.WriteFile(p, data, 0600); err != nil {
+					t.Fatal(err)
+				}
+			case "non-UFS":
+				// Repack a valid signed container after altering a preserved partition.
+				if err := os.WriteFile(filepath.Join(output, "firmware.0.1.ifs"), []byte("changed partition"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				packed := filepath.Join(dir, "changed.signed")
+				if err := qcfm.Pack(packed, []qcfm.Input{{Path: filepath.Join(output, "firmware.0.0.ufs")}, {Path: filepath.Join(output, "firmware.0.1.ifs")}}, qcfm.Options{Version: 2, Sign: true}); err != nil {
+					t.Fatal(err)
+				}
+				osPath := filepath.Join(output, "firmware_os.exe")
+				if err := os.Remove(osPath); err != nil {
+					t.Fatal(err)
+				}
+				if err := autoloader.Create(osPath, filepath.Join(dir, "cap.exe"), []string{packed}, 2); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := VerifyBuild(input, output, io.Discard); err == nil {
+				t.Fatal("accepted changed " + kind)
+			}
+		})
 	}
 }
 func TestNativeBatchScriptFailurePublishesNothing(t *testing.T) {

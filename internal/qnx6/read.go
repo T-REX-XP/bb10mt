@@ -370,3 +370,18 @@ func (im *Image) Resolve(path string) (Node, []Entry, error) {
 	}
 	return n, bad, nil
 }
+
+func (im *Image) ReadFile(p string, limit uint64) ([]byte, error) {
+	n, _, e := im.Resolve(p)
+	if e != nil {
+		return nil, e
+	}
+	if n.Mode()&0xf000 != 0x8000 || n.Size() > limit {
+		return nil, fmt.Errorf("invalid regular file size/type: %s", p)
+	}
+	var b bytes.Buffer
+	if e = im.Data(n, &b); e != nil {
+		return nil, e
+	}
+	return b.Bytes(), nil
+}

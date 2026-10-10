@@ -27,6 +27,7 @@ import (
 	"github.com/bb10root/bb10mt/internal/qnx6"
 	"github.com/bb10root/bb10mt/internal/raw"
 	"github.com/bb10root/bb10mt/internal/rcfs"
+	"github.com/bb10root/bb10mt/internal/runtimeenv"
 	"github.com/bb10root/bb10mt/internal/vmdk"
 )
 
@@ -41,6 +42,7 @@ Usage: bb10mt <command> [options]
   autoloader verify    Validate a CAP offset table
   autoloader loaders   Extract embedded gzip RAM loaders
   batch                Build and verify OS/radio autoloaders from a patch script
+  patcher              validate, build or assemble a v4-neo pack (native Go)
   packages validate    Validate a local declarative package catalog
   plan                 Resolve packages and lock a compatible image build
   build                Build a new image/autoloader directory from a locked plan
@@ -227,7 +229,7 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 	}
 	name := args[0]
 	args = args[1:]
-	if name == "autoloader" || name == "qnx6" || name == "bar" || name == "raw" || name == "rcfs" || name == "vmdk" || name == "usb" || name == "packages" {
+	if name == "autoloader" || name == "qnx6" || name == "bar" || name == "raw" || name == "rcfs" || name == "vmdk" || name == "usb" || name == "packages" || name == "patcher" {
 		if len(args) == 0 {
 			return apperror.New(apperror.Usage, name+" subcommand required", "Run bb10mt --help to list commands.")
 		}
@@ -240,6 +242,42 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 	f := newFlags(name, errOut)
 	var run func() error
 	switch name {
+	case "patcher validate", "patcher build", "patcher assemble":
+		root := f.String("root", "", "v4-neo directory (default: beside bundled binary)")
+		pack := f.String("pack", "", "Maintained source pack for assembly")
+		release := f.String("release", "", "Verified bundled release directory for assembly")
+		source := f.String("source", "", "Go repository with patchers/v4-neo templates for assembly")
+		commit := f.String("source-commit", "", "Source revision recorded in assembled snapshot")
+		f.str(&f.input, "i", "input", "", "Original firmware CAP autoloader")
+		f.str(&f.output, "o", "output", "", "NEW output directory")
+		run = func() error {
+			if name == "patcher assemble" {
+				for key, value := range map[string]string{"pack": *pack, "release": *release, "source": *source, "output": f.output, "source-commit": *commit} {
+					if err := require(value, key); err != nil {
+						return err
+					}
+				}
+				return assemblePatcher(*pack, *release, *source, *commit, f.output, out)
+			}
+			if *root == "" {
+				program, err := runtimeenv.Program()
+				if err != nil {
+					return err
+				}
+				*root = filepath.Dir(filepath.Dir(filepath.Dir(program)))
+			}
+			if name == "patcher validate" {
+				_, _, err := validatePatcher(*root, out)
+				return err
+			}
+			if err := require(f.input, "input"); err != nil {
+				return err
+			}
+			if err := require(f.output, "output"); err != nil {
+				return err
+			}
+			return buildPatcher(*root, f.input, f.output, version, out)
+		}
 	case "packages validate":
 		catalog := f.String("catalog", "", "Local package catalog directory")
 		run = func() error {

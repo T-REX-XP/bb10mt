@@ -90,6 +90,7 @@ class VerifierTests(unittest.TestCase):
             report = json.loads(self.report.read_text())
             self.assertEqual(report['nonUFSPartitionsPreserved'], [2])
             self.assertIsNotNone(report['radioUnchangedSHA256'])
+            self.assertTrue(report['embeddedUFSMatchesImage'])
 
     def test_os_only_source_does_not_require_radio(self):
         self.prepare(radio=False)
@@ -117,6 +118,24 @@ class VerifierTests(unittest.TestCase):
         (self.build / 'firmware.ufs').write_bytes(b'not the embedded UFS')
         with self.assertRaises(AssertionError):
             self.run_verifier()
+
+    def test_repaired_loose_checksum_does_not_validate_stale_autoloader(self):
+        # The handset's failing filename checksum and the kernel's expected one.
+        bad = b'QNX6 directory entry' + struct.pack('<I', 0xfffffd77)
+        repaired = b'QNX6 directory entry' + struct.pack('<I', 0x7fffc8d0)
+        self.original[1] = (5, bad)
+        self.changed[1] = (5, bad)
+        self.prepare()
+        (self.build / 'firmware.ufs').write_bytes(repaired)
+        # Both CAP/container CRCs are valid, only the loose UFS was repaired.
+        with self.assertRaisesRegex(AssertionError, 'rebuild the autoloader'):
+            self.run_verifier()
+        self.assertFalse(self.report.exists())
+        # Repacking with the repaired bytes is the required acceptance condition.
+        self.changed[1] = (5, repaired)
+        (self.build / 'firmware_os.exe').write_bytes(cap([container(self.changed)]))
+        self.run_verifier()
+        self.assertTrue(json.loads(self.report.read_text())['embeddedUFSMatchesImage'])
 
     def test_repacked_but_changed_radio_rejected(self):
         self.prepare()

@@ -9,6 +9,7 @@ import (
 )
 
 var commands = []string{
+	"patcher validate", "patcher build", "patcher assemble",
 	"packages validate", "plan", "build",
 	"pack", "unpack", "verify", "split", "batch", "connect", "usb list", "flash", "info", "loader", "nuke",
 	"autoloader create", "autoloader extract", "autoloader verify", "autoloader loaders",

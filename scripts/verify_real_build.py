@@ -177,9 +177,12 @@ def main():
         logical, embedded_hash = logical_digest(output, next(c for c in chunks if c[0] == 5))
         with ufs.open("rb") as image:
             image_hash = digest_range(image, 0, ufs.stat().st_size)
-        assert logical == ufs.stat().st_size and embedded_hash == image_hash
+        assert logical == ufs.stat().st_size and embedded_hash == image_hash, (
+            'packed OS filesystem differs from the verified loose UFS; '
+            'rebuild the autoloader after any filename-checksum repair')
     report = {"osAutoloader": os_path.name, "embeddedUFSSHA256": image_hash,
-              "embeddedUFSBytes": logical, "partitions": len(chunks),
+              "embeddedUFSBytes": logical, "embeddedUFSMatchesImage": True,
+              "partitions": len(chunks),
               "containerTrailerCRCVerified": True, "CAPStubAndOverlayPreserved": True,
               "nonUFSPartitionsPreserved": preserved,
               "radioUnchangedSHA256": radio_hash, "independentVerifier": "Python standard library",
