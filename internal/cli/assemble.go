@@ -402,6 +402,17 @@ func assemblePatcher(pack, release, source, commit, output string, log io.Writer
 		}
 	}
 	lock := patcherLock{SchemaVersion: 1, Patcher: "v4-neo", ToolVersion: version, SourceCommit: commit, SourcePack: pack, BootHash: before[bootSource], CertificateHash: before[certificateSource], Executables: executables, Files: files, Private: true, HostKey: true}
+	if _, err := os.Lstat(filepath.Join(pack, "build-settings.json")); err == nil {
+		var settings struct {
+			WorkDirectories map[string]string `json:"workDirectories"`
+		}
+		if err := packJSON(pack, "build-settings.json", &settings); err != nil {
+			return err
+		}
+		lock.WorkDirectories = settings.WorkDirectories
+	} else if !os.IsNotExist(err) {
+		return err
+	}
 	if err := writePackJSON(filepath.Join(stage, "neo.lock.json"), lock); err != nil {
 		return err
 	}

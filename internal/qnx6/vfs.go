@@ -81,7 +81,11 @@ func (e *Editor) dropEntry(parent Node, name string, number uint32) error {
 			entryName = string(value)
 		}
 		if entryName == name {
-			clear(b)
+			// BB10 treats inode=0 AND length=0 as EOF, not a deleted slot.
+			// Compact survivors like the Pascal writer, retaining block padding
+			// only at the end. Clearing this slot would hide every later entry.
+			copy(raw[off:], raw[off+32:])
+			clear(raw[len(raw)-32:])
 			return e.writeData(parent, bytes.NewReader(raw), uint64(len(raw)))
 		}
 	}

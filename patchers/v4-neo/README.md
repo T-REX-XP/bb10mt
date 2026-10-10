@@ -17,8 +17,13 @@ Passcode input, rooting and SSH startup still require handset verification.
 
 ## Build fresh firmware
 
-Keep the original firmware. Choose a new output directory on a drive with at
-least 10 GiB free for a typical Z30 build; highly sparse inputs can need more.
+Keep the original firmware. Allow at least 10 GiB free in the packing workspace
+for a typical Z30 build; highly sparse inputs can need more. Choose a new output
+directory with enough space for the final autoloaders.
+The maintained Windows snapshot packs under `D:\tmp`; workspace settings are
+read from `build-settings.json` during assembly and pinned in `neo.lock.json`.
+The workspace needs packing capacity; the output volume needs room only for
+the final autoloaders.
 
 ```powershell
 .\bin\windows-amd64\bb10mt.exe patcher build -i 'D:\firmware\original.exe' -o 'D:\tmp\v4-neo-z30'
@@ -48,6 +53,15 @@ does not update an already packed `_os.exe`. The final gate rejects that stale
 autoloader even when its container CRC passes. Build from the original firmware into a new
 directory with the command above. Existing firmware outputs are not repaired
 by updating this patcher folder.
+
+Directory removal must compact surviving records. The BB10 filesystem driver
+treats an inode-zero, name-length-zero record as the end of the directory;
+clearing a record in the middle hides every subsequent entry. Releases through
+Go11 contained this defect: deleting Evernote left `/apps` ending at byte 96,
+hiding Android, IMF keyboard packages, BBM and App World. Rebuild from the
+original firmware with Go12 or later. The reader and final checks now reject
+live entries after an end marker. Passing image checks still requires separate
+handset testing before claiming the keyboard or services work.
 
 On the investigated handset, native BBID sign-in completed successfully after
 certificate enrollment and trust registration. The earlier boot certificate

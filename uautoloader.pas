@@ -501,7 +501,11 @@ begin
         Inc(I, 4);
     end;
 
-    Position := Position + SearchLimit;
+    { The last candidate was already checked. Advance one DWORD beyond it,
+      keeping the eight-byte overlap needed for a split triple signature.
+      With exactly twelve trailing bytes SearchLimit is zero; advancing by
+      SearchLimit alone would loop forever on a raw CAP without a marker. }
+    Position := Position + SearchLimit + 4;
   end;
 end;
 
@@ -723,8 +727,9 @@ begin
 
   cap := TFileStream.Create(capexe, fmOpenRead or fmShareDenyWrite);
   try
-    capSize := GetPEEndOffset(cap);
-    if capSize = 0 then capSize := cap.Size;
+    { Preserve legitimate bytes between the PE sections and the CAP tail.
+      GetCapSize also handles an already wrapped autoloader as the stub input. }
+    capSize := GetCapSize(cap);
 
     cap.Position := 0;
     outStream := TFileStream.Create(oFile, fmCreate or fmShareExclusive);

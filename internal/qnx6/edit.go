@@ -507,50 +507,7 @@ func (e *Editor) Remove(p string, recursive bool) error {
 	if err != nil {
 		return err
 	}
-	raw, err := e.directoryBytes(parent)
-	if err != nil {
-		return err
-	}
-	entries, err := e.Entries(parent)
-	if err != nil {
-		return err
-	}
-	found := false
-	for _, v := range entries {
-		if v.Name == name {
-			found = true
-			break
-		}
-	}
-	if !found {
-		return fmt.Errorf("directory entry missing")
-	}
-	for off := 0; off < len(raw); off += 32 {
-		if binio.U32(raw, off) != n.Number {
-			continue
-		}
-		b := raw[off : off+32]
-		entryName := ""
-		if b[4] <= 27 {
-			entryName = string(b[5 : 5+int(b[4])])
-		} else if b[4] == 255 {
-			idx := uint64(binio.U32(b, 8))
-			h, err := e.tableRead(e.nameBlocks, e.nameSize, idx*uint64(e.BlockSize), 2)
-			if err != nil {
-				return err
-			}
-			nb, err := e.tableRead(e.nameBlocks, e.nameSize, idx*uint64(e.BlockSize)+2, int(binio.LE.Uint16(h)))
-			if err != nil {
-				return err
-			}
-			entryName = string(nb)
-		}
-		if entryName == name {
-			clear(b)
-			break
-		}
-	}
-	if err = e.writeData(parent, bytes.NewReader(raw), uint64(len(raw))); err != nil {
+	if err = e.dropEntry(parent, name, n.Number); err != nil {
 		return err
 	}
 	n, err = e.Inode(n.Number)

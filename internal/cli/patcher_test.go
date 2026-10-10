@@ -15,6 +15,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -170,6 +171,15 @@ func TestPatcherNativeBuild(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			root, lock := patcherFixture(t)
+			work := t.TempDir()
+			lock.WorkDirectories = map[string]string{runtime.GOOS: work}
+			lockData, err := json.Marshal(lock)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(root, "neo.lock.json"), lockData, 0600); err != nil {
+				t.Fatal(err)
+			}
 			dir := t.TempDir()
 			input := patcherInput(t, dir, withRadio)
 			output := filepath.Join(dir, "new output")
@@ -211,6 +221,14 @@ func TestPatcherNativeBuild(t *testing.T) {
 			stages, _ := filepath.Glob(filepath.Join(dir, ".v4-neo-*"))
 			if len(stages) != 0 {
 				t.Fatal("intermediate staging retained", stages)
+			}
+			workEntries, err := os.ReadDir(work)
+			if err != nil || len(workEntries) != 0 || !strings.Contains(progress.String(), "Packing workspace: "+work) {
+				t.Fatal("packing workspace not used or not cleaned", workEntries, err)
+			}
+			publishedStages, _ := filepath.Glob(filepath.Join(dir, ".v4-neo-delivery-*"))
+			if len(publishedStages) != 0 {
+				t.Fatal("delivery staging retained", publishedStages)
 			}
 			if err := buildPatcher(root, input, output, lock.ToolVersion, io.Discard); apperror.Classify(err).Code != 4 {
 				t.Fatal(err)

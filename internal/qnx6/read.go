@@ -280,14 +280,21 @@ func (im *Image) Entries(n Node) ([]Entry, error) {
 	}
 	result := []Entry{}
 	seen := map[string]bool{}
+	ended := false
 	for off := uint64(0); off < n.Size(); off += 32 {
 		b, e := im.tableRead(blocks, n.Size(), off, 32)
 		if e != nil {
 			return nil, e
 		}
 		ino := binio.U32(b, 0)
+		if ino == 0 && b[4] == 0 {
+			ended = true
+		}
 		if ino == 0 || ino == Missing {
 			continue
+		}
+		if ended {
+			return nil, fmt.Errorf("directory inode %d has live entry after end-of-directory at byte %d", n.Number, off)
 		}
 		if ino > im.Inodes {
 			return nil, fmt.Errorf("directory inode out of bounds")

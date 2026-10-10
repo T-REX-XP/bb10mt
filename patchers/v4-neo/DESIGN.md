@@ -22,7 +22,7 @@ maintained firmware data and native verification of the final output contents.
 ## Fresh installation
 
 Validate the snapshot and source contracts, select the host executable, hash
-the original firmware and run Go `batch` into a private sibling directory.
+the original firmware and run Go `batch` in the configured private workspace.
 Go repairs the source filesystem before applying the script and packs only
 the checked final image. Check every maintained public payload,
 its pathname checksums and service permissions, the superblock CRC, CAP stub
@@ -33,10 +33,19 @@ directory, remove unpacked partitions and intermediate containers, then publish
 only the EXEs atomically without replacement.
 There is no post-pack mutation or second OS repacking pass.
 
+QNX6 directory deletion compacts surviving records, matching the Pascal writer.
+The BB10 driver stops at the first record with both inode and name length zero;
+unused records may therefore appear only after the last live entry. Readers
+reject live entries after that marker, including during final image validation.
+Independent raw-record audits exercise this rule without relying on the writer's
+directory traversal. Earlier Go releases through Go11 violated this rule when
+removing packages and must not be used to generate firmware.
+
 Failed builds remove their temporary output and leave the input and existing
 output untouched. Preserve a failure log beside the requested output when
-possible. Disk space is needed on the selected output volume, so firmware
-outputs need not live beside the patcher.
+possible. Windows firmware packing uses `D:\tmp` in the maintained snapshot;
+only verified autoloaders are copied to a private directory on the output volume
+before atomic publication. Outputs need not live beside the patcher or workspace.
 
 ## Package updates and rollback
 

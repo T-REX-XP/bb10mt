@@ -15,6 +15,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,6 +41,7 @@ type patcherLock struct {
 	ToolVersion     string            `json:"toolVersion"`
 	SourceCommit    string            `json:"sourceCommit"`
 	SourcePack      string            `json:"sourcePack"`
+	WorkDirectories map[string]string `json:"workDirectories,omitempty"`
 	BootHash        string            `json:"bootHookSha256"`
 	CertificateHash string            `json:"canonicalCertificateSha256"`
 	Executables     map[string]string `json:"executables"`
@@ -525,15 +527,36 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 	if err = os.MkdirAll(filepath.Dir(output), 0755); err != nil {
 		return err
 	}
-	available, err := atomicfile.AvailableSpace(filepath.Dir(output))
+	var workLock patcherLock
+	if err = packJSON(root, "neo.lock.json", &workLock); err != nil {
+		return err
+	}
+	workParent := filepath.Dir(output)
+	if configured := workLock.WorkDirectories[runtime.GOOS]; configured != "" {
+		if !filepath.IsAbs(configured) {
+			return fmt.Errorf("packing workspace must be absolute: %s", configured)
+		}
+		workParent = filepath.Clean(configured)
+	}
+	if err = os.MkdirAll(workParent, 0755); err != nil {
+		return err
+	}
+	available, err := atomicfile.AvailableSpace(workParent)
 	if err != nil {
 		return err
 	}
 	needed := uint64(st.Size())*3 + (256 << 20)
 	if available < needed {
-		return apperror.New(apperror.Space, fmt.Sprintf("Insufficient output-volume space: need %.1f GiB, available %.1f GiB", float64(needed)/(1<<30), float64(available)/(1<<30)), "Free space or choose an output folder on another drive.")
+		return apperror.New(apperror.Space, fmt.Sprintf("Insufficient packing-workspace space: need %.1f GiB, available %.1f GiB", float64(needed)/(1<<30), float64(available)/(1<<30)), "Free space in "+workParent+".")
 	}
-	stage, err := os.MkdirTemp(filepath.Dir(output), ".v4-neo-*")
+	outputAvailable, err := atomicfile.AvailableSpace(filepath.Dir(output))
+	if err != nil {
+		return err
+	}
+	if outputAvailable < uint64(st.Size())+(256<<20) {
+		return apperror.New(apperror.Space, "Insufficient output space for final autoloaders", "Free space or choose an output folder on another drive.")
+	}
+	stage, err := os.MkdirTemp(workParent, ".v4-neo-*")
 	if err != nil {
 		return err
 	}
@@ -567,6 +590,7 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 		}
 	}()
 	fmt.Fprintln(progress, "Phase 1/6: checking pinned snapshot and foundation contracts")
+	fmt.Fprintln(progress, "Packing workspace:", workParent)
 	lock, expected, err := validatePatcher(root, progress)
 	if err != nil {
 		return err
@@ -672,10 +696,25 @@ func buildPatcher(root, input, output, version string, console io.Writer) (err e
 	if err = os.RemoveAll(result); err != nil {
 		return fmt.Errorf("remove private build intermediates: %w", err)
 	}
+	// Only final EXEs are copied to the output volume. Packing always stays in
+	// the configured workspace, including when the output is on another drive.
+	publication, err := os.MkdirTemp(filepath.Dir(output), ".v4-neo-delivery-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(publication)
+	for _, name := range names {
+		if err = copyPackFile(filepath.Join(delivery, name), filepath.Join(publication, name)); err != nil {
+			return err
+		}
+	}
+	if err = os.RemoveAll(delivery); err != nil {
+		return fmt.Errorf("remove private autoloader copies: %w", err)
+	}
 	if err := interrupted(); err != nil {
 		return err
 	}
-	if err = atomicfile.PublishDirectory(delivery, output); err != nil {
+	if err = atomicfile.PublishDirectory(publication, output); err != nil {
 		return err
 	}
 	fmt.Fprintf(console, "v4-neo build complete in %.1fs: %s\n", time.Since(progress.started).Seconds(), output)
