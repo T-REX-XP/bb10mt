@@ -1,0 +1,143 @@
+name: Native Go CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  test:
+    env:
+      CGO_ENABLED: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - name: Format, vet and test
+        shell: pwsh
+        run: |
+          $files = @(gofmt -l cmd internal)
+          if ($LASTEXITCODE -ne 0 -or $files.Count -ne 0) { throw "gofmt failed: $files" }
+          go vet ./...
+          if ($LASTEXITCODE -ne 0) { throw 'go vet failed' }
+          go test -race -coverprofile=coverage.out ./...
+          if ($LASTEXITCODE -ne 0) { throw 'go test failed' }
+      - name: Catalog exporter path and publication tests
+        run: python -B scripts/test_export_weather_packages.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-${{ matrix.os }}
+          path: coverage.out
+  fuzz:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - run: go test ./internal/qcfm -run '^$' -fuzz FuzzRead -fuzztime 30s
+      - run: go test ./internal/autoloader -run '^$' -fuzz FuzzRead -fuzztime 30s
+      - run: go test ./internal/qnx6 -run '^$' -fuzz FuzzOpen -fuzztime 30s
+      - run: go test ./internal/bar -run '^$' -fuzz FuzzManifest -fuzztime 30s
+      - run: go test ./internal/raw -run '^$' -fuzz FuzzRaw -fuzztime 30s
+      - run: go test ./internal/rcfs -run '^$' -fuzz FuzzRCFS -fuzztime 30s
+      - run: go test ./internal/vmdk -run '^$' -fuzz FuzzDisk -fuzztime 30s
+      - run: go test ./internal/connect -run '^$' -fuzz FuzzFrame -fuzztime 30s
+      - run: go test ./internal/usb -run '^$' -fuzz FuzzFrame -fuzztime 30s
+      - run: go test ./internal/loaderarchive -run '^$' -fuzz FuzzArchive -fuzztime 30s
+      - run: go test ./internal/patchpkg -run '^$' -fuzz FuzzManifest -fuzztime 30s
+  packages:
+    needs: [test, fuzz, fuse, security]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - run: sudo apt-get update && sudo apt-get install --yes 7zip
+      - run: python3 scripts/vendor_runtime.py
+      - run: go run ./cmd/release --version v0.0.0-ci --output dist
+      - run: cd dist && sha256sum --check SHA256SUMS
+      - run: python3 scripts/verify_bundled_release.py dist
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-packages
+          path: dist/
+  bundled-runtime:
+    needs: packages
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux-amd64
+          - os: ubuntu-24.04-arm
+            target: linux-arm64
+          - os: windows-2022
+            target: windows-amd64.exe
+          - os: windows-11-arm
+            target: windows-arm64.exe
+          - os: macos-15-intel
+            target: darwin-amd64
+          - os: macos-15
+            target: darwin-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: native-packages
+          path: dist
+      - name: Verify, extract, launch, enumerate USB and reject changed cache
+        shell: pwsh
+        run: python scripts/smoke_bundle.py --binary dist/bb10mt-v0.0.0-ci-${{ matrix.target }} --usb
+      - name: Bundled FUSE transaction
+        if: runner.os == 'Linux'
+        run: sudo python3 scripts/smoke_bundle.py --binary dist/bb10mt-v0.0.0-ci-${{ matrix.target }} --fuse --empty-root
+  fuse:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - name: Install kernel FUSE helper
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes fuse3
+          test -c /dev/fuse
+      - name: Mount, mutate, unmount and verify a synthetic image
+        env:
+          BB10MT_FUSE_TEST: '1'
+          CGO_ENABLED: '1'
+        run: go test -race ./internal/qnx6 -run TestFuseMountedTransaction -count=1
+  security:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        target: [linux, windows, darwin]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - name: Install pinned vulnerability scanner
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+      - name: Check reachable dependency vulnerabilities
+        env:
+          GOOS: ${{ matrix.target }}
+          GOARCH: amd64
+          CGO_ENABLED: '0'
+        run: govulncheck ./...

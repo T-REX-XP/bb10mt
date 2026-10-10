@@ -1,0 +1,11 @@
+{
+  "osAutoloader": "Z30_10.3.03.3216_STA100-1-2-3-4-5-6_os_os.exe",
+  "embeddedUFSSHA256": "1fc0b9cd34222e10fd77aa31145bbfc58f4c94e61279c3b2363f4209af78a6e6",
+  "embeddedUFSBytes": 2596012032,
+  "partitions": 5,
+  "containerTrailerCRCVerified": true,
+  "CAPStubAndOverlayPreserved": true,
+  "radioUnchangedSHA256": null,
+  "independentVerifier": "Python standard library",
+  "deviceAcceptance": "not tested"
+}

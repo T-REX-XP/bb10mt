@@ -1,0 +1,85 @@
+{
+  "allSeventeenFilesIdenticalAcrossTwoBuilds": true,
+  "date": "2026-10-10",
+  "localTests": {
+    "firmwareRegressionTests": {
+      "v4_new": 25,
+      "v4_orig": 19
+    },
+    "firmwareSourcePreflight": "v4_orig and v4_new passed after synchronized integration documentation",
+    "goVulnerabilityScan": "govulncheck v1.8.0 Windows amd64 passed; native C libraries not scanned",
+    "linuxAmd64": "all Go package tests via WSL; bundled extraction/alternate-runtime/USB enumeration/QNX6/cache tampering passed",
+    "linuxEmptyRoot": "procfs-only chroot: no host libraries; version, USB initialization, mkfs/fsck and bundled helper passed",
+    "linuxKernelFuse": "readonly, writable and rollback unit integration passed; bundled CLI writable transaction passed",
+    "windowsAmd64": "all Go package tests, vet, modules, bundled extraction/alternate-runtime/USB enumeration/QNX6/cache tampering passed",
+    "workflowSyntax": "actionlint v1.7.12 passed"
+  },
+  "matchingNativeSourceArchives": 22,
+  "qualificationLimits": [
+    "Hosted Actions not executed from this checkout",
+    "Native macOS/arm64 execution pending",
+    "No handset operation performed",
+    "Drivers/kernel support/mount permissions remain OS requirements"
+  ],
+  "sha256": {
+    "DEPENDENCIES.md": "56546b3adf6a22f824dd399c6b21cf59314bb845c4bf447ce065c09edcdb5bfc",
+    "bb10mt-v0.7.0-go.2-darwin-amd64": "5b599351b867e2f25675a17e19f3fb7f22578726b8fc4b43a33a822d53c4204d",
+    "bb10mt-v0.7.0-go.2-darwin-amd64.tar.gz": "9f371539f3e9be260e009ae34c431ce85bf6f7efac38afcef04070b48e9b9bff",
+    "bb10mt-v0.7.0-go.2-darwin-arm64": "92b67b2a0799580104ff3dae81a177c82944feb4aea37379b586696e2df57960",
+    "bb10mt-v0.7.0-go.2-darwin-arm64.tar.gz": "2b1a960f5f210f1a13002452f7ffa6546dd4043821f175f2abdc049b0c01eb18",
+    "bb10mt-v0.7.0-go.2-linux-amd64": "c4b8f054039db15ecb04f077c0048b0520ae5d1451cfd88b31b28ee2745fedfd",
+    "bb10mt-v0.7.0-go.2-linux-amd64.tar.gz": "90ad91ee7bfbc019164b91cd14b2051d713c4b87694503a42904593aac0dc29e",
+    "bb10mt-v0.7.0-go.2-linux-arm64": "35189392a314be33f79b19831583f7b5d3ca9a8da54fe3e04665e3d5f84c26a0",
+    "bb10mt-v0.7.0-go.2-linux-arm64.tar.gz": "af72811bf65d313d5620c6c4d286609dd5a0df8d569a35c12406b19c8e206ce7",
+    "bb10mt-v0.7.0-go.2-windows-amd64.exe": "d32681639b3e0b71b56f37b0cc1a138f895334628c28c58ee93b43562ca8e50d",
+    "bb10mt-v0.7.0-go.2-windows-amd64.zip": "85148847fa77cd9b01e7ad613542016ddf796aa738b640681094f4900c9b8be3",
+    "bb10mt-v0.7.0-go.2-windows-arm64.exe": "8bd5eee057f54473ecaa41d7a3d31ce4a891008e4b808bcb935a57d38a24204c",
+    "bb10mt-v0.7.0-go.2-windows-arm64.zip": "a7d9f74b6084a737552079cfc0d419ef9509871afd9f0f339ad5d5e0c88ab0b7",
+    "runtime-sources.zip": "8229b5e3accccbbdd995cb32c795c249203d4df055fb884e02bb11c9ee357fe5",
+    "runtime.lock.json": "87ea2a5a5267bb80fc12c11ca2eb3406fb24b13b8a855abfce83c5c6ce2c463a",
+    "sbom.cdx.json": "c16e6e5d793c2b0dca225ef13e5602ad352a79433ff72fb7398745a3937be9a2"
+  },
+  "sourceSnapshotSHA256": "0d2a6dd16c11c0b71fcd28891db81f023d96434e3f06e8fce4c9b1e298ee706c",
+  "sourceSnapshotTree": "0278ece1f017252b034b4a1b65a504f5e1d68c62",
+  "targets": {
+    "darwin-amd64": {
+      "archivedExecutableMatches": true,
+      "executableBytes": 5628112,
+      "payloadSHA256": "ee46d0343298c4c44dfce84e153f75b388efc7a30b10897defe5a06ca83a8246",
+      "verifiedRuntimeFiles": 26
+    },
+    "darwin-arm64": {
+      "archivedExecutableMatches": true,
+      "executableBytes": 5284114,
+      "payloadSHA256": "57e22fbacc233fe8fde7f8e217d7010aaf99ec70a448f71895b3bc46204ed4f2",
+      "verifiedRuntimeFiles": 26
+    },
+    "linux-amd64": {
+      "archivedExecutableMatches": true,
+      "executableBytes": 9453692,
+      "payloadSHA256": "cf6906277db2abbdbe663bf00ae5bd61c076a34fd8210e78711326a369c60925",
+      "verifiedRuntimeFiles": 60
+    },
+    "linux-arm64": {
+      "archivedExecutableMatches": true,
+      "executableBytes": 8192124,
+      "payloadSHA256": "e1f07051aef1486cb5a407e426be059c48678322ef53e0af456342977b454bb9",
+      "verifiedRuntimeFiles": 60
+    },
+    "windows-amd64": {
+      "archivedExecutableMatches": true,
+      "executableBytes": 6028800,
+      "payloadSHA256": "ca3518d349ae0bc6c6771917d0820a596516e4080999e22bee925fd92aa068f4",
+      "verifiedRuntimeFiles": 27
+    },
+    "windows-arm64": {
+      "archivedExecutableMatches": true,
+      "executableBytes": 5520896,
+      "payloadSHA256": "d75d2c6005dc75bdf298a856b0e59d96bf4a020ff8d61cd5a5c8882c8b7d9cdd",
+      "verifiedRuntimeFiles": 27
+    }
+  },
+  "toolchain": "go1.27.2",
+  "verifiedChecksumEntries": 16,
+  "version": "v0.7.0-go.2"
+}

@@ -1,0 +1,34 @@
+{
+  "version": "v0.7.0-go.1",
+  "toolchain": "go1.27.2",
+  "sourceSnapshotTree": "24db684316a90600f480d1256575a58e4b9ca2ef",
+  "buildsFromCleanSource": true,
+  "archiveCount": 6,
+  "directExecutableCount": 6,
+  "verifiedChecksumEntries": 14,
+  "allFifteenOutputFilesIdenticalAcrossTwoLocalBuilds": true,
+  "directBinariesMatchArchivedBinaries": true,
+  "archiveContentsAndTimestampsVerified": true,
+  "moduleHashesVerifiedInInventory": 10,
+  "sha256": {
+    "bb10mt-v0.7.0-go.1-windows-arm64.zip": "01f8f3d5e6de8496e36ca9b843f01b18bbda7a7c0b7e5c63c7862cf2bec6a6e3",
+    "sbom.cdx.json": "04c3e57e92e2035226f61fdca510954d14a31dfec8eb4dc0f4bae3f41d4e5c59",
+    "bb10mt-v0.7.0-go.1-darwin-arm64.tar.gz": "0c66be4e39b4812770ea3365fa1888fed210e2814ea605f8726ae310012982a9",
+    "bb10mt-v0.7.0-go.1-linux-amd64.tar.gz": "0e2012676c3c1e6a6a1f9f38d43b7d7f44918860b89d80c7ceb4f74a63e861df",
+    "bb10mt-v0.7.0-go.1-windows-amd64.zip": "494fe62aa617e1549d51692996faf6796d8b8807c1e74654741f89fcbdae5216",
+    "DEPENDENCIES.md": "7e160ab618b097f8320ffbd63ea5a988ba0daac6cf82030162307cb16c659822",
+    "bb10mt-v0.7.0-go.1-windows-arm64.exe": "841c069d51d14c9b58af0001c45808a0646225bbb9e0fd7d2eb4f30b018f34b6",
+    "bb10mt-v0.7.0-go.1-darwin-amd64.tar.gz": "98c786062f45753f4b6abb11ce80110380a5289fc41da85cf9fea9f8a1a5196b",
+    "bb10mt-v0.7.0-go.1-linux-amd64": "a19a71bba4d211a68eedf646f865ad80edad9f0189d78a7979148aa0898af5c8",
+    "bb10mt-v0.7.0-go.1-linux-arm64.tar.gz": "b69dab2feb5b5f40f4e4d2c0c7116c25ad444298cde3c6b399c1980a39573f8b",
+    "bb10mt-v0.7.0-go.1-darwin-amd64": "be82e6a847c1b2c0b2212051c1f5e339b24cfd1aaa9316cd03ad0a3343cc8d65",
+    "bb10mt-v0.7.0-go.1-linux-arm64": "de73b280965eb6c4b08d407886bb05d2fadc09f255450a6b925e9953c8ac00fa",
+    "bb10mt-v0.7.0-go.1-darwin-arm64": "e541174123f81f18156eba08c3f149a97de3cff48becf23f7525aba413c15ab2",
+    "bb10mt-v0.7.0-go.1-windows-amd64.exe": "e6a490757b63ed5e846182f6ffa193546183f28df6b5f156820314c48b4f7c14"
+  },
+  "limits": [
+    "Both builds used this Windows host; cross-host reproducibility was not executed.",
+    "Linux uses system glibc/libdl/libpthread; USB requires installed libusb and Linux mounts require FUSE.",
+    "Hosted CI, native macOS/race tests and handset qualification remain pending."
+  ]
+}
