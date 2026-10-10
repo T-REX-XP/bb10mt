@@ -465,7 +465,7 @@ func Mount(ctx context.Context, input, output, mountpoint string, opt MountOptio
 			return fmt.Errorf("mount source invalid: %s", check.Errors[0])
 		}
 		root := &fuseNode{state: state, number: 1}
-		mountOpt := &fs.Options{NullPermissions: true, MountOptions: fuse.MountOptions{FsName: "bb10mt-qnx6", Name: "qnx6", Debug: opt.Debug, Options: []string{"default_permissions"}}}
+		mountOpt := &fs.Options{NullPermissions: true, MountOptions: fuse.MountOptions{FsName: "bb10mt-qnx6", Name: "qnx6", Debug: opt.Debug, DirectMount: os.Geteuid() == 0, Options: []string{"default_permissions"}}}
 		if !writable {
 			mountOpt.MountOptions.Options = append(mountOpt.MountOptions.Options, "ro")
 		}

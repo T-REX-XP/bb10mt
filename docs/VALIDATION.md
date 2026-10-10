@@ -59,7 +59,7 @@ No firmware binary, private key or credential is committed. Retained local Z30
 
 Hosted GitHub Actions have been configured and syntax-checked, but were not run
 from this local checkout. Native macOS execution and local race instrumentation
-were not performed; this Windows host has no exposed C compiler. Cross-builds
+were not performed; this Windows host has no configured GCC-compatible compiler for Go race tests. Cross-builds
 and target vulnerability scans do not substitute for those runtime checks.
 
 USB/network services and BAR PPS registration have simulated tests; no handset
@@ -73,3 +73,16 @@ The compatibility matrix records unsupported format variants and intentional
 CLI changes. A checksum, fake signature or passing filesystem test cannot prove
 OEM authentication or handset boot acceptance. Retain the Pascal rollback path
 until hosted and handset qualification is complete.
+
+## Bundled runtime follow-up (v0.7.0-go.2)
+
+All six targets embed pinned native libraries and license notices. Local
+Windows/Linux amd64 smoke tests passed extraction, alternate-runtime launch,
+file hashes, rejected cache tampering, USB initialization/enumeration and QNX6
+creation/fsck. Linux passed a writable bundled FUSE transaction and an empty-
+root chroot test with procfs but no installed host libraries (version, USB
+initialization, mkfs/fsck and helper launch). Native import closure checks cover
+every target; macOS dylibs declare minimum macOS 14. Native arm64/macOS runs
+remain hosted CI gates. Go test/vet cover the cache/runtime seams; native C
+versions are inventoried but not scanned by govulncheck. See BUNDLED_RUNTIME.md
+and BUNDLED_RELEASE_VALIDATION.json for distribution details/evidence.

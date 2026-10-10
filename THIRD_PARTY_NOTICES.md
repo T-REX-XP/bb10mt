@@ -5,10 +5,12 @@ compression and decompression. It is pinned in `go.mod` and `go.sum`, uses
 no C runtime, and is licensed under MIT. Its complete license is included
 in `third_party/licenses/lzo-MIT.txt` and every release archive.
 
-The USB adapter uses `github.com/ebitengine/purego` v0.11.1 to call a separately
-installed libusb-1.0 without a C compiler. Purego is licensed under Apache-2.0;
+The USB adapter uses `github.com/ebitengine/purego` v0.11.1 to call the bundled
+libusb-1.0 without a C compiler. Purego is licensed under Apache-2.0;
 its license is included in `third_party/licenses/purego-Apache-2.0.txt` and
-release archives. Libusb itself is loaded at runtime and is not redistributed.
+release archives. Libusb itself is redistributed as a dynamically loaded LGPL-2.1-or-later
+shared library. Complete notices and matching source archives accompany releases.
+See [native runtime licensing](docs/BUNDLED_RUNTIME.md).
 
 Legacy `loaders.dat` uses `github.com/ulikunitz/xz` v0.5.17 for bounded LZMA
 decompression (BSD-3-Clause, `third_party/licenses/xz-BSD.txt`). Archive metadata,
@@ -29,3 +31,11 @@ library. Go is distributed under BSD-3-Clause; see https://go.dev/LICENSE.
 
 The embedded QCFM legacy fake-signature bytes originate from this project's
 GPL Pascal source. They are not a private signing key or an OEM signature.
+
+Native releases also include platform runtime libraries and, on Linux, a
+fusermount3 executable. `third_party/runtime.lock.json` pins each upstream
+archive and matching open-source source/patch archive by SHA256. Embedded
+`licenses/` includes native notices, GPL/LGPL texts and the GCC Runtime Library
+Exception. Microsoft VC runtime is distributed under its embedded proprietary
+redistributable license. `runtime-sources.zip` supplies corresponding native
+open-source sources; it is part of every binary release distribution.

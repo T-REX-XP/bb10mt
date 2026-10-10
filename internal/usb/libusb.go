@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"unsafe"
 
+	"github.com/bb10root/bb10mt/internal/runtimeenv"
 	"github.com/ebitengine/purego"
 )
 
@@ -79,6 +80,7 @@ func NewContext(library string) (*Context, error) {
 		default:
 			library = "libusb-1.0.so.0"
 		}
+		library = runtimeenv.Library(library)
 	}
 	lookup, close, err := openLibrary(library)
 	if err != nil {

@@ -160,7 +160,7 @@ is inferred from these local checks.
 The retained USB/network protocol now has native services with injected
 transports. Tests cover fragmented frames, CRC/sequence errors, RSA/AES/password
 handshakes, loader initialization/probing and staged flashing. USB dynamically
-loads a separately installed libusb-1.0; it never detaches a kernel driver.
+loads the bundled libusb-1.0 in release distributions; it never detaches a kernel driver.
 Unknown variants fail, and passwords are never guessed or retried.
 
 Linux FUSE exposes read-only images or a disposable writable transaction. Kernel
@@ -175,3 +175,15 @@ scan for Linux, Windows and macOS alongside race/fuzz/FUSE tests. Six release
 targets carry deterministic archives, SHA256SUMS, dependency/license inventories,
 CycloneDX metadata and tagged prerelease provenance. See VALIDATION.md for the
 actual local evidence and acceptance limits.
+
+## Bundled runtime follow-up
+
+The user requested all user-space dependencies in each single executable.
+`cmd/launcher` embeds a manifest-verified runtime ZIP. Linux uses a static
+bootstrap and a bundled loader/library closure; Windows/macOS bundle libusb,
+and Windows includes its required VC runtime. Extraction is atomic and cached;
+Unix exec preserves process behavior. Explicit extraction and replacement
+runtime options preserve library replacement. Matching sources and licenses
+ship with the release. Root mounts directly; ordinary-user FUSE privileges stay
+under OS administration. Native import closure checks and six native smoke CI
+jobs qualify the distribution. See BUNDLED_RUNTIME.md for the full design.

@@ -49,7 +49,7 @@ USB commands wait for BootROM mode by default; normal-mode reboot requires
 `--reboot-to-bootrom`. Firmware inputs are staged and fully validated before USB
 is opened. USB and network framing follow the retained legacy protocol, including
 legacy cryptography, with synthetic tests; sequence/status assumptions still
-require handset transcripts. The USB library is installed separately and no
+require handset transcripts. The release bundles libusb; no
 kernel driver is detached automatically. `info --bootrom-only` does not load RAM
 code. `loader --loader-file` initializes one selected, validated loader.
 `loader --probe-all` tries up to 256 distinct loader candidates once and emits
@@ -75,12 +75,16 @@ filesystem check. Failed mutations discard that output. Deleting or replacing
 the last link to an open file returns EBUSY; close it first. Extended attributes,
 special-device creation and exchange renames return unsupported errors. The
 adapter serializes requests and streams whole-file rewrites for random writes.
-It requires Linux FUSE support and a fusermount helper; no FUSE C library is linked.
+It requires kernel FUSE and mount permissions. The release bundles an
+unprivileged fusermount3 helper; ordinary users may still need an administrator-
+installed setuid helper. No FUSE C library is linked.
 
 Each release target is available as a direct executable and an archive. No Go
-installation is required. Linux builds use the system glibc/libdl/libpthread;
-musl-only distributions are unsupported. Windows/macOS use normal OS libraries.
-USB still requires libusb-1.0 and Linux mounting requires the FUSE helper.
+installation is required. Releases from v0.7.0-go.2 embed their native user-space
+libraries, including libusb, the Windows C runtime and Linux loader/libraries/
+helper. Linux bundles support musl hosts; macOS bundles require macOS 14+.
+OS kernels, drivers, frameworks and permissions remain external. See
+[BUNDLED_RUNTIME.md](BUNDLED_RUNTIME.md) for extraction, replacement and licenses.
 
 CI validation is configured in `.github/workflows`, but a local run cannot
 establish that hosted jobs passed. Device operations have not been performed.

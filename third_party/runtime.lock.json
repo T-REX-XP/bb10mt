@@ -1,0 +1,423 @@
+{
+  "schema": 1,
+  "origin": "Official libusb 1.0.30 release, Homebrew libusb 1.0.30 Sonoma bottles, Debian trixie package/source indexes retrieved 2026-10-10; official Microsoft Visual C++ 14.51 redistributables",
+  "assets": [
+    {
+      "id": "libc6-amd64",
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.41-12+deb13u4_amd64.deb",
+      "sha256": "967aa62605721081c3eb2a17650611a792aa802d76a6511d1840242623d204c9",
+      "filename": "libc6_2.41-12+deb13u4_amd64.deb",
+      "format": "deb",
+      "package": "libc6",
+      "version": "2.41-12+deb13u4",
+      "source": "glibc"
+    },
+    {
+      "id": "libgcc-s1-amd64",
+      "url": "https://deb.debian.org/debian/pool/main/g/gcc-14/libgcc-s1_14.2.0-19_amd64.deb",
+      "sha256": "3c71917b490d1a17aed43196a2787a256ecf060526cdb20216a74bedc061b150",
+      "filename": "libgcc-s1_14.2.0-19_amd64.deb",
+      "format": "deb",
+      "package": "libgcc-s1",
+      "version": "14.2.0-19",
+      "source": "gcc-14"
+    },
+    {
+      "id": "libcap2-amd64",
+      "url": "https://deb.debian.org/debian/pool/main/libc/libcap2/libcap2_2.75-10+deb13u1+b3_amd64.deb",
+      "sha256": "89fc4d34fc7a28ad6f0fcd0c561ab253b9dedf6f77f5a000b47c276c8295bf67",
+      "filename": "libcap2_2.75-10+deb13u1+b3_amd64.deb",
+      "format": "deb",
+      "package": "libcap2",
+      "version": "1:2.75-10+deb13u1+b3",
+      "source": "libcap2"
+    },
+    {
+      "id": "libudev1-amd64",
+      "url": "https://deb.debian.org/debian/pool/main/s/systemd/libudev1_257.13-1~deb13u1_amd64.deb",
+      "sha256": "5d41c284f5a93b05bc7d648b61a02dd2bb9ff05b2261ad1a8b7d96044a0cfa88",
+      "filename": "libudev1_257.13-1~deb13u1_amd64.deb",
+      "format": "deb",
+      "package": "libudev1",
+      "version": "257.13-1~deb13u1",
+      "source": "systemd"
+    },
+    {
+      "id": "libusb-1.0-0-amd64",
+      "url": "https://deb.debian.org/debian/pool/main/libu/libusb-1.0/libusb-1.0-0_1.0.28-1_amd64.deb",
+      "sha256": "bb6467a002915c4ac464aa1b22204907951a30e43bcb86596ebd3539e84458e9",
+      "filename": "libusb-1.0-0_1.0.28-1_amd64.deb",
+      "format": "deb",
+      "package": "libusb-1.0-0",
+      "version": "2:1.0.28-1",
+      "source": "libusb-1.0"
+    },
+    {
+      "id": "fuse3-amd64",
+      "url": "https://deb.debian.org/debian/pool/main/f/fuse3/fuse3_3.17.2-3_amd64.deb",
+      "sha256": "4866550a235224b538a66fcaf95c8a796b6968d21c6f231086e142350b302eea",
+      "filename": "fuse3_3.17.2-3_amd64.deb",
+      "format": "deb",
+      "package": "fuse3",
+      "version": "3.17.2-3",
+      "source": "fuse3"
+    },
+    {
+      "id": "libc6-arm64",
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.41-12+deb13u4_arm64.deb",
+      "sha256": "8784eda966b189c777a384dac5ce009e8fc9b52d006926c5a013e7fa8aa688cc",
+      "filename": "libc6_2.41-12+deb13u4_arm64.deb",
+      "format": "deb",
+      "package": "libc6",
+      "version": "2.41-12+deb13u4",
+      "source": "glibc"
+    },
+    {
+      "id": "libgcc-s1-arm64",
+      "url": "https://deb.debian.org/debian/pool/main/g/gcc-14/libgcc-s1_14.2.0-19_arm64.deb",
+      "sha256": "1108bc87879833d6d9a145f22a4a15cddb34e065b4b5f4b97bee586adbac2851",
+      "filename": "libgcc-s1_14.2.0-19_arm64.deb",
+      "format": "deb",
+      "package": "libgcc-s1",
+      "version": "14.2.0-19",
+      "source": "gcc-14"
+    },
+    {
+      "id": "libcap2-arm64",
+      "url": "https://deb.debian.org/debian/pool/main/libc/libcap2/libcap2_2.75-10+deb13u1+b3_arm64.deb",
+      "sha256": "863aa5b9cdf6f80010b48982d4639126b09a89eeef2c0c5c7be226297c811581",
+      "filename": "libcap2_2.75-10+deb13u1+b3_arm64.deb",
+      "format": "deb",
+      "package": "libcap2",
+      "version": "1:2.75-10+deb13u1+b3",
+      "source": "libcap2"
+    },
+    {
+      "id": "libudev1-arm64",
+      "url": "https://deb.debian.org/debian/pool/main/s/systemd/libudev1_257.13-1~deb13u1_arm64.deb",
+      "sha256": "459b1c9c17cc3c586e90d13d2a991715d498c6eed6c046cabf321021167bc380",
+      "filename": "libudev1_257.13-1~deb13u1_arm64.deb",
+      "format": "deb",
+      "package": "libudev1",
+      "version": "257.13-1~deb13u1",
+      "source": "systemd"
+    },
+    {
+      "id": "libusb-1.0-0-arm64",
+      "url": "https://deb.debian.org/debian/pool/main/libu/libusb-1.0/libusb-1.0-0_1.0.28-1_arm64.deb",
+      "sha256": "1eed4dc72f3e6fe22dc8c20aba32f0c0c596a51d3e1c1e4c401937005e78ef11",
+      "filename": "libusb-1.0-0_1.0.28-1_arm64.deb",
+      "format": "deb",
+      "package": "libusb-1.0-0",
+      "version": "2:1.0.28-1",
+      "source": "libusb-1.0"
+    },
+    {
+      "id": "fuse3-arm64",
+      "url": "https://deb.debian.org/debian/pool/main/f/fuse3/fuse3_3.17.2-3_arm64.deb",
+      "sha256": "713b5cb7d1a035a14d8267446796f4de02805381d657c2130cad25769b86894e",
+      "filename": "fuse3_3.17.2-3_arm64.deb",
+      "format": "deb",
+      "package": "fuse3",
+      "version": "3.17.2-3",
+      "source": "fuse3"
+    },
+    {
+      "id": "libusb-windows",
+      "url": "https://github.com/libusb/libusb/releases/download/v1.0.30/libusb-1.0.30.7z",
+      "sha256": "7fb1dfec805b97983763d7d0ae244320da12add1003d4249c96cc4d586398c79",
+      "filename": "libusb-1.0.30.7z",
+      "format": "7z",
+      "package": "libusb",
+      "version": "1.0.30",
+      "source": "libusb-1.0.30"
+    },
+    {
+      "id": "libusb-darwin-amd64",
+      "url": "https://ghcr.io/v2/homebrew/core/libusb/blobs/sha256:1387aea9bbed3a1e57884b5b43166fc83cfdae415e5f3803a8259ff77a4ba613",
+      "sha256": "1387aea9bbed3a1e57884b5b43166fc83cfdae415e5f3803a8259ff77a4ba613",
+      "filename": "libusb-1.0.30-sonoma.bottle.tar.gz",
+      "format": "tar",
+      "package": "libusb",
+      "version": "1.0.30",
+      "source": "libusb-1.0.30"
+    },
+    {
+      "id": "libusb-darwin-arm64",
+      "url": "https://ghcr.io/v2/homebrew/core/libusb/blobs/sha256:74fa9ed0291e2d3e7827a06ea836a57c96d8861a7079544d47be231f08eb4c02",
+      "sha256": "74fa9ed0291e2d3e7827a06ea836a57c96d8861a7079544d47be231f08eb4c02",
+      "filename": "libusb-1.0.30-arm64_sonoma.bottle.tar.gz",
+      "format": "tar",
+      "package": "libusb",
+      "version": "1.0.30",
+      "source": "libusb-1.0.30"
+    },
+    {
+      "id": "msvcrt-amd64",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/ebdab8e5-1d7b-4d9f-a11b-cbb1720c3b12/843068991DAAA1F73AD9F6239BCE4D0F6A07A51F18C37EA2A867E9BECA71295C/VC_redist.x64.exe",
+      "sha256": "843068991daaa1f73ad9f6239bce4d0f6a07a51f18c37ea2a867e9beca71295c",
+      "filename": "VC_redist.x64.exe",
+      "format": "burn",
+      "package": "Microsoft-VC-Runtime",
+      "version": "14.51.36247.0",
+      "source": "Microsoft proprietary redistributable; license embedded; source not available"
+    },
+    {
+      "id": "msvcrt-arm64",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/ece44298-3977-4f73-ab91-c13fe79cfea8/B70EF586669A620A0A30A1156969C05C6A3831DC8F8BC992DA75779D2A92F944/VC_redist.arm64.exe",
+      "sha256": "b70ef586669a620a0a30a1156969c05c6a3831dc8f8bc992da75779d2a92f944",
+      "filename": "VC_redist.arm64.exe",
+      "format": "burn",
+      "package": "Microsoft-VC-Runtime",
+      "version": "14.51.36247.0",
+      "source": "Microsoft proprietary redistributable; license embedded; source not available"
+    }
+  ],
+  "sources": [
+    {
+      "id": "fuse3-fuse3_3.17.2-3.dsc",
+      "url": "https://deb.debian.org/debian/pool/main/f/fuse3/fuse3_3.17.2-3.dsc",
+      "sha256": "1339847e7e6512f31d61cf1fe4598341c4b8aa43ea6dc546914b21f96f29deb3",
+      "filename": "fuse3_3.17.2-3.dsc",
+      "package": "fuse3",
+      "version": "3.17.2-3",
+      "size": 2428
+    },
+    {
+      "id": "fuse3-fuse3_3.17.2.orig.tar.gz",
+      "url": "https://deb.debian.org/debian/pool/main/f/fuse3/fuse3_3.17.2.orig.tar.gz",
+      "sha256": "3d932431ad94e86179e5265cddde1d67aa3bb2fb09a5bd35c641f86f2b5ed06f",
+      "filename": "fuse3_3.17.2.orig.tar.gz",
+      "package": "fuse3",
+      "version": "3.17.2-3",
+      "size": 5627028
+    },
+    {
+      "id": "fuse3-fuse3_3.17.2.orig.tar.gz.asc",
+      "url": "https://deb.debian.org/debian/pool/main/f/fuse3/fuse3_3.17.2.orig.tar.gz.asc",
+      "sha256": "df18d3972c68dd0e8f7ad2a544a24ac54d48aa4b42d99b717448f7fe8e71cea4",
+      "filename": "fuse3_3.17.2.orig.tar.gz.asc",
+      "package": "fuse3",
+      "version": "3.17.2-3",
+      "size": 314
+    },
+    {
+      "id": "fuse3-fuse3_3.17.2-3.debian.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/f/fuse3/fuse3_3.17.2-3.debian.tar.xz",
+      "sha256": "eaf7a177761ae8bf99ea97619f2cccf83f169b4f000e17b6106834e69456b5a2",
+      "filename": "fuse3_3.17.2-3.debian.tar.xz",
+      "package": "fuse3",
+      "version": "3.17.2-3",
+      "size": 19440
+    },
+    {
+      "id": "gcc-14-gcc-14_14.2.0-19.dsc",
+      "url": "https://deb.debian.org/debian/pool/main/g/gcc-14/gcc-14_14.2.0-19.dsc",
+      "sha256": "7db1e202cce66617e9134a662c877a3a773de5b612fd52179815877e0ecfb847",
+      "filename": "gcc-14_14.2.0-19.dsc",
+      "package": "gcc-14",
+      "version": "14.2.0-19",
+      "size": 47347
+    },
+    {
+      "id": "gcc-14-gcc-14_14.2.0.orig.tar.gz",
+      "url": "https://deb.debian.org/debian/pool/main/g/gcc-14/gcc-14_14.2.0.orig.tar.gz",
+      "sha256": "e162a5ef3f0077ecae598c6556908d2ab80841532df3398072a96a6df6e6aa29",
+      "filename": "gcc-14_14.2.0.orig.tar.gz",
+      "package": "gcc-14",
+      "version": "14.2.0-19",
+      "size": 94299633
+    },
+    {
+      "id": "gcc-14-gcc-14_14.2.0-19.debian.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/g/gcc-14/gcc-14_14.2.0-19.debian.tar.xz",
+      "sha256": "31cbab4bafa48aa1c540497bd8098cbcf98e673778f927651ed944709f687781",
+      "filename": "gcc-14_14.2.0-19.debian.tar.xz",
+      "package": "gcc-14",
+      "version": "14.2.0-19",
+      "size": 2577016
+    },
+    {
+      "id": "glibc-glibc_2.41-12+deb13u4.dsc",
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.41-12+deb13u4.dsc",
+      "sha256": "0915324aa646bb99abfaa9aa6ecb734b30babd28454a3e51f3152912370fbd3e",
+      "filename": "glibc_2.41-12+deb13u4.dsc",
+      "package": "glibc",
+      "version": "2.41-12+deb13u4",
+      "size": 7576
+    },
+    {
+      "id": "glibc-glibc_2.41.orig.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.41.orig.tar.xz",
+      "sha256": "f24aa441021121a79266f0d75242706cab8843a47901fefe74527491807f1998",
+      "filename": "glibc_2.41.orig.tar.xz",
+      "package": "glibc",
+      "version": "2.41-12+deb13u4",
+      "size": 20323540
+    },
+    {
+      "id": "glibc-glibc_2.41-12+deb13u4.debian.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.41-12+deb13u4.debian.tar.xz",
+      "sha256": "dda4153511bfd543502d18e5bc9323110996fe9c531f14ae3fad6eb17f027c7d",
+      "filename": "glibc_2.41-12+deb13u4.debian.tar.xz",
+      "package": "glibc",
+      "version": "2.41-12+deb13u4",
+      "size": 499524
+    },
+    {
+      "id": "libcap2-libcap2_2.75-10+deb13u1.dsc",
+      "url": "https://deb.debian.org/debian/pool/main/libc/libcap2/libcap2_2.75-10+deb13u1.dsc",
+      "sha256": "cb6af220de216655ec55bb1f5abf3fa8f03e82c9956f120b313056e895c02ea6",
+      "filename": "libcap2_2.75-10+deb13u1.dsc",
+      "package": "libcap2",
+      "version": "1:2.75-10+deb13u1",
+      "size": 2714
+    },
+    {
+      "id": "libcap2-libcap2_2.75.orig.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/libc/libcap2/libcap2_2.75.orig.tar.xz",
+      "sha256": "de4e7e064c9ba451d5234dd46e897d7c71c96a9ebf9a0c445bc04f4742d83632",
+      "filename": "libcap2_2.75.orig.tar.xz",
+      "package": "libcap2",
+      "version": "1:2.75-10+deb13u1",
+      "size": 197868
+    },
+    {
+      "id": "libcap2-libcap2_2.75.orig.tar.xz.asc",
+      "url": "https://deb.debian.org/debian/pool/main/libc/libcap2/libcap2_2.75.orig.tar.xz.asc",
+      "sha256": "c71b593e7c3160fd7f406641074d93462bbc4906c9243937a0e232f42d5c54d2",
+      "filename": "libcap2_2.75.orig.tar.xz.asc",
+      "package": "libcap2",
+      "version": "1:2.75-10+deb13u1",
+      "size": 833
+    },
+    {
+      "id": "libcap2-libcap2_2.75-10+deb13u1.debian.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/libc/libcap2/libcap2_2.75-10+deb13u1.debian.tar.xz",
+      "sha256": "d375de2f743f112835fc0eef2a9c305c1109371954cf53e109b7f046fe58c1bc",
+      "filename": "libcap2_2.75-10+deb13u1.debian.tar.xz",
+      "package": "libcap2",
+      "version": "1:2.75-10+deb13u1",
+      "size": 24628
+    },
+    {
+      "id": "libusb-1.0-libusb-1.0_1.0.28-1.dsc",
+      "url": "https://deb.debian.org/debian/pool/main/libu/libusb-1.0/libusb-1.0_1.0.28-1.dsc",
+      "sha256": "be92b66ffc1784d592a78bf4ae1c5f5776fd3cd96ebbc677341cc71956d3611b",
+      "filename": "libusb-1.0_1.0.28-1.dsc",
+      "package": "libusb-1.0",
+      "version": "2:1.0.28-1",
+      "size": 2643
+    },
+    {
+      "id": "libusb-1.0-libusb-1.0_1.0.28.orig.tar.bz2",
+      "url": "https://deb.debian.org/debian/pool/main/libu/libusb-1.0/libusb-1.0_1.0.28.orig.tar.bz2",
+      "sha256": "966bb0d231f94a474eaae2e67da5ec844d3527a1f386456394ff432580634b29",
+      "filename": "libusb-1.0_1.0.28.orig.tar.bz2",
+      "package": "libusb-1.0",
+      "version": "2:1.0.28-1",
+      "size": 658053
+    },
+    {
+      "id": "libusb-1.0-libusb-1.0_1.0.28.orig.tar.bz2.asc",
+      "url": "https://deb.debian.org/debian/pool/main/libu/libusb-1.0/libusb-1.0_1.0.28.orig.tar.bz2.asc",
+      "sha256": "a92679aa89b24339f554c767cee6e4fb0c16802aef50f1280284f05edbf65d19",
+      "filename": "libusb-1.0_1.0.28.orig.tar.bz2.asc",
+      "package": "libusb-1.0",
+      "version": "2:1.0.28-1",
+      "size": 833
+    },
+    {
+      "id": "libusb-1.0-libusb-1.0_1.0.28-1.debian.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/libu/libusb-1.0/libusb-1.0_1.0.28-1.debian.tar.xz",
+      "sha256": "4057d38b4b0766f1de2957f25c98e9e447748c08ba75bc15eb29094b67829f89",
+      "filename": "libusb-1.0_1.0.28-1.debian.tar.xz",
+      "package": "libusb-1.0",
+      "version": "2:1.0.28-1",
+      "size": 18108
+    },
+    {
+      "id": "systemd-systemd_257.13-1~deb13u1.dsc",
+      "url": "https://deb.debian.org/debian/pool/main/s/systemd/systemd_257.13-1~deb13u1.dsc",
+      "sha256": "1b3405d671a82d1e20c9d99f52d4336aafe8543b28d04e91b7f1f586d3a667c7",
+      "filename": "systemd_257.13-1~deb13u1.dsc",
+      "package": "systemd",
+      "version": "257.13-1~deb13u1",
+      "size": 8696
+    },
+    {
+      "id": "systemd-systemd_257.13.orig.tar.gz",
+      "url": "https://deb.debian.org/debian/pool/main/s/systemd/systemd_257.13.orig.tar.gz",
+      "sha256": "1eb7d5f9ff8a426ff880a3cded9ce819613ba8003ac5ddde9eca162f14ddabe7",
+      "filename": "systemd_257.13.orig.tar.gz",
+      "package": "systemd",
+      "version": "257.13-1~deb13u1",
+      "size": 16543653
+    },
+    {
+      "id": "systemd-systemd_257.13-1~deb13u1.debian.tar.xz",
+      "url": "https://deb.debian.org/debian/pool/main/s/systemd/systemd_257.13-1~deb13u1.debian.tar.xz",
+      "sha256": "9c6e435d613b996efcdb3b7dd9a4cebaa745333a3f64dc722f3fad646f1fdc1a",
+      "filename": "systemd_257.13-1~deb13u1.debian.tar.xz",
+      "package": "systemd",
+      "version": "257.13-1~deb13u1",
+      "size": 183128
+    },
+    {
+      "id": "libusb-1.0.30-source",
+      "url": "https://github.com/libusb/libusb/releases/download/v1.0.30/libusb-1.0.30.tar.bz2",
+      "sha256": "fea36f34f9156400209595e300840767ab1a385ede1dc7ee893015aea9c6dbaf",
+      "filename": "libusb-1.0.30.tar.bz2",
+      "package": "libusb",
+      "version": "1.0.30"
+    }
+  ],
+  "targets": {
+    "linux-amd64": [
+      "libc6-amd64",
+      "libgcc-s1-amd64",
+      "libcap2-amd64",
+      "libudev1-amd64",
+      "libusb-1.0-0-amd64",
+      "fuse3-amd64"
+    ],
+    "linux-arm64": [
+      "libc6-arm64",
+      "libgcc-s1-arm64",
+      "libcap2-arm64",
+      "libudev1-arm64",
+      "libusb-1.0-0-arm64",
+      "fuse3-arm64"
+    ],
+    "windows-amd64": [
+      {
+        "asset": "libusb-windows",
+        "member": "VS2025/MS64/dll/libusb-1.0.dll",
+        "name": "lib/libusb-1.0.dll"
+      },
+      {
+        "asset": "msvcrt-amd64",
+        "cabinet": "a4",
+        "member": "vcruntime140.dll_amd64"
+      }
+    ],
+    "windows-arm64": [
+      {
+        "asset": "libusb-windows",
+        "member": "VS2025/ARM64/dll/libusb-1.0.dll",
+        "name": "lib/libusb-1.0.dll"
+      },
+      {
+        "asset": "msvcrt-arm64",
+        "cabinet": "a1",
+        "member": "vcruntime140.dll_arm64"
+      }
+    ],
+    "darwin-amd64": [
+      "libusb-darwin-amd64"
+    ],
+    "darwin-arm64": [
+      "libusb-darwin-arm64"
+    ]
+  }
+}

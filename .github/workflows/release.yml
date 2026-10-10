@@ -26,7 +26,11 @@ jobs:
         env:
           RELEASE_VERSION: ${{ github.ref_name }}
         run: |
+          sudo apt-get update
+          sudo apt-get install --yes 7zip
+          python3 scripts/vendor_runtime.py
           go run ./cmd/release --version "$RELEASE_VERSION" --output dist
+          python3 scripts/verify_bundled_release.py dist
           cd dist
           sha256sum --check SHA256SUMS
       - name: Publish prerelease

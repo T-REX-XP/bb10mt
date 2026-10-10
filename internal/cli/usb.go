@@ -11,13 +11,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bb10root/bb10mt/internal/runtimeenv"
 	"github.com/bb10root/bb10mt/internal/usb"
 )
 
 func usbCommand(f *flags, name string, out io.Writer) func() error {
 	var library, passwordEnv string
 	o := usb.Options{Bus: -1, Address: -1, Wait: 30 * time.Second, RunDelay: time.Second}
-	f.StringVar(&library, "libusb", "", "Path to separately installed libusb-1.0 shared library")
+	f.StringVar(&library, "libusb", "", "Override the bundled libusb-1.0 shared library")
 	f.IntVar(&o.Bus, "bus", -1, "Select USB bus (-1 selects any)")
 	f.IntVar(&o.Address, "address", -1, "Select initial USB address (-1 selects any)")
 	if name == "usb list" {
@@ -60,7 +61,7 @@ func usbCommand(f *flags, name string, out io.Writer) func() error {
 		f.str(&f.versions, "v", "version", "2", "Raw partition QCFM version: 1, 2 or 1,2")
 	}
 	return func() (err error) {
-		executable, e := os.Executable()
+		executable, e := runtimeenv.Program()
 		if e != nil {
 			return e
 		}
@@ -80,6 +81,9 @@ func usbCommand(f *flags, name string, out io.Writer) func() error {
 					*item.value = path
 				}
 			}
+		}
+		if o.Config == "" && runtimeenv.Root() != "" {
+			o.Config = filepath.Join(runtimeenv.Root(), "bb10mt.ini")
 		}
 		if o.Bus < -1 || o.Bus > 255 || o.Address < -1 || o.Address > 255 || o.Wait <= 0 || o.RunDelay < 0 {
 			return fmt.Errorf("invalid USB selector/timeout/delay")

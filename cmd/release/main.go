@@ -25,6 +25,7 @@ func main() {
 func run() error {
 	version := flag.String("version", "", "Release version (e.g. v0.7.0-go.1)")
 	output := flag.String("output", "dist", "New output directory")
+	runtimeRoot := flag.String("runtime-root", "out/runtimes", "Verified runtime inputs prepared by scripts/vendor_runtime.py")
 	flag.Parse()
 	if !regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.]+)?$`).MatchString(*version) {
 		return fmt.Errorf("invalid release version")
@@ -50,6 +51,11 @@ func run() error {
 	if e != nil {
 		return e
 	}
+	sbom, e = nativeArtifacts(sbom, *runtimeRoot)
+	if e != nil {
+		return e
+	}
+	inventory = append(inventory, []byte("\nNative runtime archives, versions, hashes and source locations: runtime.lock.json.\nLibraries and helpers are embedded in each executable. Extract with --extract-runtime.\nMatching source archives and distro patches: runtime-sources.zip.\n")...)
 	if e = os.WriteFile(filepath.Join(tmp, "DEPENDENCIES.md"), inventory, 0644); e != nil {
 		return e
 	}
@@ -67,26 +73,17 @@ func run() error {
 		if e = os.Mkdir(path, 0700); e != nil {
 			return e
 		}
-		bin := filepath.Join(path, binary)
-		cmd := exec.Command("go", "build", "-trimpath", "-buildvcs=false", "-ldflags=-s -w -buildid= -X main.version="+*version, "-o", bin, "./cmd/bb10mt")
-		env := []string{}
-		for _, v := range os.Environ() {
-			key, _, _ := strings.Cut(v, "=")
-			switch strings.ToUpper(key) {
-			case "GOOS", "GOARCH", "CGO_ENABLED", "GOFLAGS":
-				continue
-			}
-			env = append(env, v)
-		}
-		cmd.Env = append(env, "GOOS="+goos, "GOARCH="+arch, "CGO_ENABLED=0", "GOFLAGS=")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if e = cmd.Run(); e != nil {
-			return e
+		bin, err := bundleTarget(*runtimeRoot, path, goos, arch, binary, *version)
+		if err != nil {
+			return err
 		}
 		entries := []release.Entry{{Name: binary, Source: bin, Mode: 0755}}
-		for _, name := range []string{"LICENSE", "README_GO.md", "bb10mt.ini", "docs/MIGRATION.md", "docs/COMPATIBILITY.md", "docs/VALIDATION.md", "docs/REAL_IMAGE_VALIDATION.json", "docs/REAL_BUILD_VALIDATION.json", "docs/WRAPPER_BUILD_VALIDATION.json", "THIRD_PARTY_NOTICES.md"} {
-			entries = append(entries, release.Entry{Name: name, Source: filepath.FromSlash(name), Mode: 0644})
+		for _, name := range []string{"LICENSE", "README_GO.md", "bb10mt.ini", "docs/BUNDLED_RUNTIME.md", "docs/MIGRATION.md", "docs/COMPATIBILITY.md", "docs/VALIDATION.md", "docs/REAL_IMAGE_VALIDATION.json", "docs/REAL_BUILD_VALIDATION.json", "docs/WRAPPER_BUILD_VALIDATION.json", "THIRD_PARTY_NOTICES.md"} {
+			source, err := stageText(name, path)
+			if err != nil {
+				return err
+			}
+			entries = append(entries, release.Entry{Name: name, Source: source, Mode: 0644})
 		}
 		licenses, err := os.ReadDir("third_party/licenses")
 		if err != nil {
@@ -126,15 +123,44 @@ func run() error {
 			return e
 		}
 		checksums = append(checksums, digest+"  "+direct)
-		if e = os.Remove(path); e != nil {
+		if e = os.RemoveAll(path); e != nil {
 			return e
 		}
+	}
+	// Publish the exact native source archives and distro patches alongside binaries.
+	var sources []release.Entry
+	if e = filepath.WalkDir(filepath.Join(*runtimeRoot, "sources"), func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if !d.Type().IsRegular() {
+			return fmt.Errorf("nonregular source archive")
+		}
+		sources = append(sources, release.Entry{Name: d.Name(), Source: p, Mode: 0644})
+		return nil
+	}); e != nil {
+		return e
+	}
+	lockPath := filepath.Join(*runtimeRoot, "runtime.lock.json")
+	lockData, e := os.ReadFile(lockPath)
+	if e != nil {
+		return e
+	}
+	if e = os.WriteFile(filepath.Join(tmp, "runtime.lock.json"), lockData, 0644); e != nil {
+		return e
+	}
+	sources = append(sources, release.Entry{Name: "runtime.lock.json", Source: lockPath, Mode: 0644}, release.Entry{Name: "vendor_runtime.py", Source: "scripts/vendor_runtime.py", Mode: 0644}, release.Entry{Name: "RUNTIME.md", Source: "docs/BUNDLED_RUNTIME.md", Mode: 0644})
+	if e = release.Archive(filepath.Join(tmp, "runtime-sources.zip"), sources, true); e != nil {
+		return e
 	}
 	sbomPath := filepath.Join(tmp, "sbom.cdx.json")
 	if e = atomicfile.Write(sbomPath, func(f *os.File) error { _, e := f.Write(sbom); return e }); e != nil {
 		return e
 	}
-	for _, name := range []string{"sbom.cdx.json", "DEPENDENCIES.md"} {
+	for _, name := range []string{"sbom.cdx.json", "DEPENDENCIES.md", "runtime.lock.json", "runtime-sources.zip"} {
 		digest, e := release.SHA256(filepath.Join(tmp, name))
 		if e != nil {
 			return e
