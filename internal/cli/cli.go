@@ -20,6 +20,7 @@ import (
 	"github.com/bb10root/bb10mt/internal/autoloader"
 	"github.com/bb10root/bb10mt/internal/bar"
 	"github.com/bb10root/bb10mt/internal/batch"
+	"github.com/bb10root/bb10mt/internal/binarypatch"
 	"github.com/bb10root/bb10mt/internal/binio"
 	"github.com/bb10root/bb10mt/internal/connect"
 	"github.com/bb10root/bb10mt/internal/patchpkg"
@@ -41,6 +42,8 @@ Usage: bb10mt <command> [options]
   autoloader extract   Extract the CAP executable
   autoloader verify    Validate a CAP offset table
   autoloader loaders   Extract embedded gzip RAM loaders
+  autoloader delta     Build an EXPERIMENTAL exact-base changed-block autoloader
+  binary diff/apply    Create compact file deltas/apply deltas or JSON byte edits
   batch                Build and verify OS/radio autoloaders from a patch script
   patcher              validate, build or assemble a v4-neo pack (native Go)
   packages validate    Validate a local declarative package catalog
@@ -229,7 +232,7 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 	}
 	name := args[0]
 	args = args[1:]
-	if name == "autoloader" || name == "qnx6" || name == "bar" || name == "raw" || name == "rcfs" || name == "vmdk" || name == "usb" || name == "packages" || name == "patcher" {
+	if name == "autoloader" || name == "qnx6" || name == "bar" || name == "raw" || name == "rcfs" || name == "vmdk" || name == "usb" || name == "packages" || name == "patcher" || name == "binary" {
 		if len(args) == 0 {
 			return apperror.New(apperror.Usage, name+" subcommand required", "Run bb10mt --help to list commands.")
 		}
@@ -242,6 +245,29 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 	f := newFlags(name, errOut)
 	var run func() error
 	switch name {
+	case "binary diff", "binary apply":
+		base := f.String("base", "", "Exact original binary for diff")
+		patch := f.String("patch", "", "BB10MT delta or JSON byte-edit recipe for apply")
+		f.str(&f.input, "i", "input", "", "Target binary for diff; original binary for apply (maximum 64 MiB)")
+		f.str(&f.output, "o", "output", "", "NEW patch file for diff; NEW binary file for apply")
+		run = func() error {
+			if err := require(f.input, "input"); err != nil {
+				return err
+			}
+			if err := require(f.output, "output"); err != nil {
+				return err
+			}
+			if name == "binary diff" {
+				if err := require(*base, "base"); err != nil {
+					return err
+				}
+				return binarypatch.Create(*base, f.input, f.output)
+			}
+			if err := require(*patch, "patch"); err != nil {
+				return err
+			}
+			return binarypatch.ApplyFile(f.input, *patch, f.output)
+		}
 	case "patcher validate", "patcher build", "patcher assemble":
 		root := f.String("root", "", "v4-neo directory (default: beside bundled binary)")
 		pack := f.String("pack", "", "Maintained source pack for assembly")
@@ -500,6 +526,28 @@ func Run(args []string, out, errOut io.Writer, version string) error {
 				return err
 			}
 			report, err := qnx6.Compact(f.input, f.output)
+			if err != nil {
+				return err
+			}
+			return json.NewEncoder(out).Encode(report)
+		}
+	case "autoloader delta":
+		base := f.String("base", "", "Exact base OS autoloader")
+		workspace := f.String("workdir", "D:\\tmp", "Existing packing workspace (Windows default D:\\tmp)")
+		experimental := f.Bool("experimental", false, "Acknowledge unverified handset erase/activation behavior")
+		f.str(&f.input, "i", "input", "", "Target patched OS autoloader")
+		f.str(&f.output, "o", "output", "", "NEW experimental output directory")
+		run = func() error {
+			for key, value := range map[string]string{"base": *base, "input": f.input, "output": f.output} {
+				if err := require(value, key); err != nil {
+					return err
+				}
+			}
+			if !*experimental {
+				return fmt.Errorf("requires --experimental: omitted-block preservation and activation are unverified; original CAP cannot enforce base hashes")
+			}
+			fmt.Fprintln(errOut, "EXPERIMENTAL: not validated for flashing or beta distribution. No device will be contacted.")
+			report, err := autoloader.BuildDelta(*base, f.input, f.output, *workspace)
 			if err != nil {
 				return err
 			}

@@ -17,6 +17,10 @@ Passcode input, rooting and SSH startup still require handset verification.
 
 ## Build fresh firmware
 
+An opt-in `autoloader delta` command builds experimental changed-block EXEs
+using the original CAP. Read [patch-only and OTA validation limits](docs/PATCH_ONLY_AND_OTA.md)
+before using it; handset partial-flash behavior has not been verified.
+
 Keep the original firmware. Allow at least 10 GiB free in the packing workspace
 for a typical Z30 build; highly sparse inputs can need more. Choose a new output
 directory with enough space for the final autoloaders.
@@ -96,7 +100,10 @@ transfer method removed its executable permission. Package commands need only
 the binary and catalog. Add a directory with `manifest.json` and payloads,
 declare exact dependencies and file ownership, and select it in a profile.
 See [PACKAGES.md](docs/PACKAGES.md) for the contract and authoring example.
-V1 supports file overlays; root installation, BAR registration changes and
+Byte-edit recipes and compact file deltas are supported by `binary diff/apply`,
+firmware scripts and `binary-patch` package operations; see
+[BINARY_PATCHES.md](docs/BINARY_PATCHES.md).
+V1 supports file overlays and exact-base binary patches; root installation, BAR registration changes and
 executable hooks need a dedicated adapter. Existing other app overlays remain
 in the foundation baseline during this migration.
 

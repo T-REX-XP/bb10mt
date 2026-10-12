@@ -74,10 +74,6 @@ func apply(plan Plan, catalog, work, input, output string, log io.Writer) error 
 			}
 			op := a.Operation
 			if state.Absent || state.SHA256 != op.SHA256 {
-				fmt.Fprintf(&script, "mkdir -p %s\n", path.Dir(a.Path))
-				if !state.Absent {
-					fmt.Fprintf(&script, "rm %s\n", a.Path)
-				}
 				source, err := regularPath(filepath.Join(catalog, directories[a.Package]), op.Source)
 				if err != nil {
 					return err
@@ -86,7 +82,15 @@ func apply(plan Plan, catalog, work, input, output string, log io.Writer) error 
 				if err != nil {
 					return err
 				}
-				fmt.Fprintf(&script, "push %s %s\n", quoted, a.Path)
+				if op.Type == "binary-patch" {
+					fmt.Fprintf(&script, "binarypatch %s %s\n", a.Path, quoted)
+				} else {
+					fmt.Fprintf(&script, "mkdir -p %s\n", path.Dir(a.Path))
+					if !state.Absent {
+						fmt.Fprintf(&script, "rm %s\n", a.Path)
+					}
+					fmt.Fprintf(&script, "push %s %s\n", quoted, a.Path)
+				}
 			}
 			fmt.Fprintf(&script, "chmod %s %s\nchown %d:%d %s\n", op.Mode, a.Path, op.UID, op.GID, a.Path)
 		}
@@ -158,9 +162,9 @@ func Build(planFile, output string, log io.Writer) error {
 		return err
 	}
 	defer os.RemoveAll(work)
-	// Keep the large pinned input in the system temporary area. Only the output
-	// transaction must share the destination volume for atomic publication.
-	inputDir, err := os.MkdirTemp("", ".bb10mt-package-input-*")
+	// Keep firmware packing beside the build transaction (D:\tmp for maintained
+	// builds), rather than silently consuming the system temporary volume.
+	inputDir, err := os.MkdirTemp(work, "input-*")
 	if err != nil {
 		return err
 	}
@@ -203,7 +207,7 @@ func Build(planFile, output string, log io.Writer) error {
 			if err = os.MkdirAll(filepath.Dir(target), 0700); err != nil {
 				return err
 			}
-			if err = copyVerified(p, target, op.SHA256); err != nil {
+			if err = copyVerified(p, target, op.payloadHash()); err != nil {
 				return err
 			}
 		}

@@ -11,8 +11,9 @@ import (
 var commands = []string{
 	"patcher validate", "patcher build", "patcher assemble",
 	"packages validate", "plan", "build",
+	"binary diff", "binary apply",
 	"pack", "unpack", "verify", "split", "batch", "connect", "usb list", "flash", "info", "loader", "nuke",
-	"autoloader create", "autoloader extract", "autoloader verify", "autoloader loaders",
+	"autoloader create", "autoloader extract", "autoloader verify", "autoloader loaders", "autoloader delta",
 	"qnx6 mkfs", "qnx6 script", "qnx6 fsck", "qnx6 compact", "qnx6 audit", "qnx6 repair-names", "qnx6 read", "qnx6 verify", "qnx6 mount",
 	"bar template", "bar update", "bar ids", "bar verify", "bar install",
 	"raw dump", "raw nvram", "rcfs read", "rcfs verify", "rcfs extract", "rcfs modify", "rcfs vmdk", "vmdk list",

@@ -13,6 +13,7 @@ import (
 
 	"github.com/bb10root/bb10mt/internal/autoloader"
 	"github.com/bb10root/bb10mt/internal/batch"
+	"github.com/bb10root/bb10mt/internal/binarypatch"
 	"github.com/bb10root/bb10mt/internal/binio"
 	"github.com/bb10root/bb10mt/internal/qcfm"
 	"github.com/bb10root/bb10mt/internal/qnx6"
@@ -164,6 +165,91 @@ func TestBuildParityAndIdempotence(t *testing.T) {
 	must(t, err)
 	if report.Files != 8 || report.AlreadyPresent != 8 {
 		t.Fatal(report)
+	}
+}
+
+func TestBinaryPatchPackageBuildAndIdempotence(t *testing.T) {
+	for _, kind := range []string{"edits", "delta"} {
+		t.Run(kind, func(t *testing.T) {
+			f := setup(t)
+			base, target := []byte("original weather library"), []byte("patched! weather library")
+			p := binarypatch.Patch{SchemaVersion: 1, Kind: "edits", BaseSHA256: hashBytes(base), TargetSHA256: hashBytes(target), BaseSize: len(base), TargetSize: len(target), Edits: []binarypatch.Edit{{Offset: 0, ExpectedHex: "6f726967696e616c", ReplacementHex: "7061746368656421"}}}
+			if kind == "delta" {
+				var err error
+				target = append(target, []byte(" extension")...)
+				p, err = binarypatch.Diff(base, target)
+				must(t, err)
+			}
+			encoded, err := p.Encode()
+			must(t, err)
+			m := f.manifests["weather"]
+			op := &m.Operations[0]
+			op.Type = "binary-patch"
+			op.Source = "library.patch"
+			op.SHA256 = hashBytes(target)
+			op.PatchSHA256 = hashBytes(encoded)
+			op.AllowAbsent = false
+			op.OriginalSHA256 = []string{hashBytes(base)}
+			f.manifests["weather"] = m
+			must(t, os.WriteFile(filepath.Join(f.catalog, "weather", op.Source), encoded, 0600))
+			f.save(t)
+			plan, lock := makePlan(t, f)
+			output := filepath.Join(f.root, "binary-built")
+			must(t, Build(lock, output, io.Discard))
+			image := filepath.Join(output, "firmware.ufs")
+			checkOutput(t, image, plan)
+			// Catalog operations remain idempotent even though raw recipes enforce base.
+			next, err := NewPlan(image, f.catalog, f.profile)
+			must(t, err)
+			nextLock := filepath.Join(f.root, "next-binary.json")
+			must(t, WritePlan(nextLock, next))
+			repeated := filepath.Join(f.root, "binary-repeated")
+			must(t, Build(nextLock, repeated, io.Discard))
+			checkOutput(t, filepath.Join(repeated, "firmware.ufs"), next)
+			// The locked payload digest is separate from the resulting binary digest.
+			encoded[len(encoded)-1] ^= 1
+			must(t, os.WriteFile(filepath.Join(f.catalog, "weather", op.Source), encoded, 0600))
+			if err := Build(lock, filepath.Join(f.root, "tampered"), io.Discard); err == nil {
+				t.Fatal("changed binary patch accepted")
+			}
+		})
+	}
+}
+
+func TestRejectInvalidBinaryPatchPackage(t *testing.T) {
+	for _, mode := range []string{"absent", "missing-patch-hash", "multiple-bases", "recipe-hash-mismatch"} {
+		t.Run(mode, func(t *testing.T) {
+			f := setup(t)
+			base := []byte("original weather library")
+			p, err := binarypatch.Diff(base, []byte("changed library"))
+			must(t, err)
+			encoded, err := p.Encode()
+			must(t, err)
+			m := f.manifests["weather"]
+			op := &m.Operations[0]
+			op.Type = "binary-patch"
+			op.Source = "patch"
+			op.SHA256 = p.TargetSHA256
+			op.PatchSHA256 = hashBytes(encoded)
+			op.AllowAbsent = false
+			op.OriginalSHA256 = []string{p.BaseSHA256}
+			switch mode {
+			case "absent":
+				op.AllowAbsent = true
+			case "missing-patch-hash":
+				op.PatchSHA256 = ""
+			case "multiple-bases":
+				op.OriginalSHA256 = append(op.OriginalSHA256, p.TargetSHA256)
+			case "recipe-hash-mismatch":
+				op.SHA256 = hashBytes(nil)
+			}
+			must(t, os.WriteFile(filepath.Join(f.catalog, "weather", "patch"), encoded, 0600))
+			f.manifests["weather"] = m
+			f.save(t)
+			if _, err := Load(f.catalog); err == nil {
+				t.Fatal("invalid binary patch operation accepted")
+			}
+		})
 	}
 }
 func strconvOwner(uid, gid uint32) string {

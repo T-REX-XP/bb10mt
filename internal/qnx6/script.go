@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/bb10root/bb10mt/internal/atomicfile"
+	"github.com/bb10root/bb10mt/internal/binarypatch"
 	"github.com/bb10root/bb10mt/internal/binio"
 )
 
@@ -24,7 +25,7 @@ type Command struct {
 }
 
 func ParseScript(data []byte) ([]Command, error) {
-	return ParseCommands(data, "mkdir", "touch", "push", "chmod", "chown", "replace", "rm", "addstring", "removeapp")
+	return ParseCommands(data, "mkdir", "touch", "push", "chmod", "chown", "replace", "rm", "addstring", "removeapp", "binarypatch")
 }
 
 func ParseCommands(data []byte, allowed ...string) ([]Command, error) {
@@ -98,7 +99,7 @@ func (e *Editor) readSmall(p string) ([]byte, error) {
 		return nil, err
 	}
 	if n.Size() > 64<<20 || n.Mode()&0xf000 != 0x8000 {
-		return nil, fmt.Errorf("text command requires regular file <=64 MiB")
+		return nil, fmt.Errorf("command requires regular file <=64 MiB")
 	}
 	var b bytes.Buffer
 	if err = e.Data(n, &b); err != nil {
@@ -432,6 +433,38 @@ func (e *Editor) execute(c Command, base string) ([]Expected, error) {
 			return nil, err
 		}
 		return nil, fn(n)
+	case "binarypatch":
+		if len(a) != 2 {
+			return fail()
+		}
+		n, _, err := e.Resolve(a[0])
+		if err != nil {
+			return nil, err
+		}
+		if n.Links() != 1 {
+			return nil, fmt.Errorf("binary patch requires an unshared regular file")
+		}
+		b, err := e.readSmall(a[0])
+		if err != nil {
+			return nil, err
+		}
+		source := a[1]
+		if !filepath.IsAbs(source) {
+			source = filepath.Join(base, source)
+		}
+		p, err := binarypatch.Load(source)
+		if err != nil {
+			return nil, err
+		}
+		b, err = p.Apply(b)
+		if err != nil {
+			return nil, err
+		}
+		if err = e.WriteFile(a[0], bytes.NewReader(b), uint64(len(b)), false); err != nil {
+			return nil, err
+		}
+		name, err := canonical(a[0])
+		return []Expected{{Path: name, SHA256: p.TargetSHA256}}, err
 	case "replace", "addstring":
 		need := 3
 		if c.Args[0] == "addstring" {

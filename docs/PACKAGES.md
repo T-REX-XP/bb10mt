@@ -25,7 +25,7 @@ write explicitly declared app assets and `/var/` files. The Android boot hook,
 nodes and privileged executable modes are excluded
 from ordinary package writes.
 
-Operations in v1 are `put-file` only. Every operation declares an exact owned
+Operations in v1 are `put-file` and `binary-patch`. Every operation declares an exact owned
 path, payload SHA256, mode, uid, gid, whether absence is acceptable, and accepted
 original SHA256 values. Existing desired content is idempotent; unknown content
 fails. Parent directories are created as needed without changing existing
@@ -55,10 +55,18 @@ directory is published once with no replacement. A failed build leaves the input
 and any existing output untouched. The lock is a reproducibility record, not a
 signature or an authorization boundary.
 
-The pinned input uses the system temporary directory; output staging uses the
-destination's parent so publication remains atomic. Both areas need space for
-their private copies. Set `TMPDIR` on Unix or `TMP`/`TEMP` on Windows to choose
-another input temporary volume. Failed transactions remove their working files.
+The pinned input and output staging use a private transaction beneath the
+destination's parent so publication remains atomic. Use `D:\tmp` for maintained
+firmware build work. This area needs space for the private input/output copies.
+Failed transactions remove their working files.
+
+`binary-patch` accepts a BB10MT compressed copy/literal delta or a JSON byte-edit
+recipe. It requires an existing binary, exactly one `originalSha256`, a separate
+`patchSha256` for the patch payload, and `sha256` for the reconstructed binary.
+The recipe must declare those same source/target hashes. The native script
+command is `binarypatch IMAGE_PATH PATCH_FILE`; see [BINARY_PATCHES.md](BINARY_PATCHES.md)
+in an assembled patcher for format details and examples. File patches apply
+offline while building; they are not stock-loader or OTA package formats.
 
 ## Migration and rollback
 

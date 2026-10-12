@@ -13,6 +13,41 @@ func invoke(args ...string) (string, error) {
 	e := Run(args, &out, &errOut, "test")
 	return out.String(), e
 }
+
+func TestBinaryDiffApplyCommands(t *testing.T) {
+	dir := t.TempDir()
+	base, target := bytes.Repeat([]byte{0, 1, 2, 255}, 1024), bytes.Repeat([]byte{0, 1, 2, 255}, 1024)
+	target[511] = 7
+	input, changed, patch, output := filepath.Join(dir, "base"), filepath.Join(dir, "target"), filepath.Join(dir, "patch"), filepath.Join(dir, "output")
+	for path, b := range map[string][]byte{input: base, changed: target} {
+		if err := os.WriteFile(path, b, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := invoke("binary", "diff", "--base", input, "-i", changed, "-o", patch); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := invoke("binary", "apply", "-i", input, "--patch", patch, "-o", output); err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(output)
+	if err != nil || !bytes.Equal(got, target) {
+		t.Fatal(err, "CLI reconstruction differs")
+	}
+	if _, err := invoke("binary", "apply", "-i", input, "--patch", patch, "-o", output); err == nil {
+		t.Fatal("overwrite accepted")
+	}
+	if _, err := invoke("binary", "apply", "-i", changed, "--patch", patch, "-o", filepath.Join(dir, "bad")); err == nil {
+		t.Fatal("wrong source accepted")
+	}
+}
+
+func TestDeltaRequiresExplicitExperimentalMode(t *testing.T) {
+	_, err := invoke("autoloader", "delta", "--base", "missing-base", "-i", "missing-target", "-o", filepath.Join(t.TempDir(), "out"))
+	if err == nil || !strings.Contains(err.Error(), "requires --experimental") {
+		t.Fatal("experimental gate was not checked before opening inputs", err)
+	}
+}
 func TestPackUnpackFromDifferentWorkingDirectory(t *testing.T) {
 	dir := t.TempDir()
 	if e := os.Mkdir(filepath.Join(dir, "inputs"), 0700); e != nil {

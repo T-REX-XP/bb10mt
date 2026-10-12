@@ -15,6 +15,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/bb10root/bb10mt/internal/binarypatch"
 )
 
 type Requirement struct {
@@ -39,7 +41,16 @@ type Operation struct {
 	GID            uint32   `json:"gid"`
 	AllowAbsent    bool     `json:"allowAbsent"`
 	OriginalSHA256 []string `json:"originalSha256,omitempty"`
+	PatchSHA256    string   `json:"patchSha256,omitempty"`
 }
+
+func (op Operation) payloadHash() string {
+	if op.Type == "binary-patch" {
+		return op.PatchSHA256
+	}
+	return op.SHA256
+}
+
 type Manifest struct {
 	SchemaVersion        int           `json:"schemaVersion"`
 	ID                   string        `json:"id"`
@@ -233,8 +244,15 @@ func validateManifest(m Manifest) error {
 	}
 	used := map[string]bool{}
 	for _, op := range m.Operations {
-		if op.Type != "put-file" || !owned[op.Path] || used[op.Path] || !cleanPath(op.Source, false) || !validHash(op.SHA256) || !modeChars.MatchString(op.Mode) {
+		if (op.Type != "put-file" && op.Type != "binary-patch") || !owned[op.Path] || used[op.Path] || !cleanPath(op.Source, false) || !validHash(op.SHA256) || !modeChars.MatchString(op.Mode) {
 			return fmt.Errorf("invalid or unowned operation %q", op.Path)
+		}
+		if op.Type == "binary-patch" {
+			if !validHash(op.PatchSHA256) || op.AllowAbsent || len(op.OriginalSHA256) != 1 {
+				return fmt.Errorf("binary patch requires patchSha256, one originalSha256 and an existing file")
+			}
+		} else if op.PatchSHA256 != "" {
+			return fmt.Errorf("put-file cannot specify patchSha256")
 		}
 		used[op.Path] = true
 		if !writable(m, op.Path) {
@@ -328,8 +346,17 @@ func Load(root string) (*Catalog, error) {
 			if e != nil {
 				return nil, e
 			}
-			if h != op.SHA256 {
+			if h != op.payloadHash() {
 				return nil, fmt.Errorf("payload SHA256 mismatch: %s", p)
+			}
+			if op.Type == "binary-patch" {
+				patch, e := binarypatch.Load(p)
+				if e != nil {
+					return nil, e
+				}
+				if patch.BaseSHA256 != op.OriginalSHA256[0] || patch.TargetSHA256 != op.SHA256 {
+					return nil, fmt.Errorf("patch and package hashes differ: %s", p)
+				}
 			}
 		}
 		c.Packages[m.ID] = Package{m, entry.Name(), hashBytes(b)}
